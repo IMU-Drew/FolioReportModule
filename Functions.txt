@@ -1,0 +1,67 @@
+//Summary statistics for continuous variable
+
+function summaryContinuous(variable) {
+	var dict = {
+  		'Minimum': min(variable),
+  		'1stQuantile: quantile(variable,0.25),
+  		'Median': quantile(variable,0.50)
+		'3rdQuantile': quantile(variable,0.75),
+		'Maximum': max(variable),
+		'Mean':mean(variable),
+		'StandardDeviation':standardDeviation (variable)
+	};
+	return dict 
+}
+
+function summaryCategorical(variable,viewNum) {
+	var array = variable;
+	function countDuplicates(obj, num){
+  		obj[num] = (++obj[num] || 1);
+  		return obj;
+	}
+	var answer = array.reduce(countDuplicates, {});
+	var sortKey = Object.keys(answer).sort(function(a, b) {
+  		return answer[b] - answer[a];
+	});
+	var sortCount=[]
+;
+	var sortFrequency=[];
+	
+	for (i = 0; i < Object.keys(answer).length; i++){
+    	
+		sortCount.push(answer[sortKey[i]])
+        
+		sortFrequency.push(answer[sortKey[i]]/(Object.keys(answer).length))
+
+	};	
+	function countUnique(iterable) {
+  		return new Set(iterable).size;
+	}
+	//var uniqueItems = Array.from(new Set(variable))
+	var dictBelow7 = {
+  		'Level': countUnique(variable),
+  		'UniqueLabel': sortKey,
+		'LabelCount':sortCount,
+		'LabelFrequency':sortFrequency
+	};	
+
+	var dictAbove7 = {
+  		'Level': countUnique(variable),
+  		'UniqueLabel': sortKey,
+  		'TopLabel':sortKey.slice(0,(viewNum-1)),
+		'TopCount':sortCount.slice(0,(viewNum-1)),
+		'TopFrequency':sortFrequency.slice(0,(viewNum-1)),
+		'BottomLabel':sortKey.slice( Object.keys(answer).length-viewNum-1,-1),
+		'BottomCount':sortCount.slice( Object.keys(answer).length-viewNum-1,-1),
+		'BottomFrequency':sortFrequency.slice( Object.keys(answer).length-viewNum-1,-1)
+
+	};
+	if (Object.keys(answer).length>7){
+		dict=dictAbove7;
+	}else {
+    		dict=dictBelow7;
+	}			
+	return dict 
+}
+
+
