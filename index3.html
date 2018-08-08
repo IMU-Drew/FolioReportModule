@@ -67,56 +67,327 @@ var tabulate = function (data,columns) {
  </body>
 <div id="myDiv" style="width: 680px; height: 500px;"><!-- Plotly chart will be drawn inside this DIV --></div>
     <script>
-	    
-        var data = [{
-  values: [203,3,1083,496],
-  labels: ['LIBRARY_ID#1', 'LIBRARY_ID#2', 'LIBRARY_ID#3', 'LIBRARY_ID#5'],
-  domain: {
-    x: [0, 0.48]
-  },
-  name: 'GHG Emissions',
-  hoverinfo: 'label+percent+name',
-  hole: .4,
-  type: 'pie'
-},{
-  values: [6,1,209,1],
-  labels: ['LIBRARY_ID#1', 'LIBRARY_ID#2', 'LIBRARY_ID#3', 'LIBRARY_ID#5' ],
-  text: 'CO2',
-  textposition: 'inside',
-  domain: {x: [.52, 1]},
-  name: 'CO2 Emissions',
-  hoverinfo: 'label+percent+name',
-  hole: .4,
-  type: 'pie'
-}];
-
-var layout = {
-  title: 'Folio Pie Chart Demo',
-  annotations: [
-    {
-      font: {
-        size: 15
-      },
-      showarrow: false,
-      text: 'SUPPRESS_I#\'N\'',
-      x: 0.17,
-      y: 0.5
-    },
-    {
-      font: {
-        size: 15
-      },
-      showarrow: false,
-      text: 'SUPPRESS_I#\'Y\'',
-      x: 0.82,
-      y: 0.5
+(function(){
+  Array.prototype.allIndexOf = function(searchElement) {
+    if (this === null) { return [-1]; }
+    var len = this.length,
+    hasIndexOf = Array.prototype.indexOf, // you know, because of IE
+    i = (hasIndexOf) ? this.indexOf(searchElement) : 0,
+    n,
+    indx = 0,
+    result = [];
+    if (len === 0 || i === -1) { return [-1]; }
+    if (hasIndexOf) {
+      // Array.indexOf does exist
+      for (n = 0; n <= len; n++) {
+        i = this.indexOf(searchElement, indx);
+        if (i !== -1) {
+          indx = i + 1;
+          result.push(i);
+        } else {
+          return result;
+        }
+      }
+      return result;
+    } else {
+    // Array.indexOf doesn't exist
+      for (n = 0; n <= len; n++) {
+        if (this[n] === searchElement) {
+          result.push(n);
+        }
+      }
+      return (result.length > 0) ? result : [-1];
     }
-  ],
-  height: 600,
-  width: 1200
+  };
+})();	    
+        var x = [];
+for (var i = 0; i < 180; i ++) {
+	x[i] = Math.random();
+}
+
+
+var y = ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'];
+
+function CdfPlot(ContVar){
+    var trace = {
+    x: ContVar,
+    type: 'histogram',
+	cumulative: {enabled: true}
+  };
+    var data = [trace];
+	Plotly.newPlot('myDiv', data);
 };
 
-Plotly.newPlot('myDiv', data, layout);
+
+function PdfPlot(ContVar,Normalized=false){
+	var Normalized=Normalized
+	if (Normalized==false){
+		var trace = {
+        	x: ContVar,
+        	type: 'histogram',
+  		};
+   		var data = [trace];
+	}
+	if (Normalized==true){
+		var data = [
+  			{
+    				x: ContVar,
+    				type: 'histogram',
+				histnorm: 'probability',
+				marker: {
+        				color: 'rgb(255,255,100)',
+    				},
+ 			 }
+		];
+	}
+	
+	Plotly.newPlot('myDiv', data);
+};
+
+function summaryCategorical(variable,viewNum) {
+	var array = variable;
+	function countDuplicates(obj, num){
+  		obj[num] = (++obj[num] || 1);
+  		return obj;
+	}
+	var answer = array.reduce(countDuplicates, {});
+	var sortKey = Object.keys(answer).sort(function(a, b) {
+  		return answer[b] - answer[a];
+	});
+	var sortCount=[]
+;
+	var sortFrequency=[];
+	
+	for (i = 0; i < Object.keys(answer).length; i++){
+    	
+		sortCount.push(answer[sortKey[i]])
+        
+		sortFrequency.push(answer[sortKey[i]]/(Object.keys(answer).length))
+
+	};	
+	function countUnique(iterable) {
+  		return new Set(iterable).size;
+	}
+	//var uniqueItems = Array.from(new Set(variable))
+	var dictBelow7 = {
+  		'Level': countUnique(variable),
+  		'UniqueLabel': sortKey,
+		'LabelCount':sortCount,
+		'LabelFrequency':sortFrequency
+	};	
+
+	var dictAbove7 = {
+  		'Level': countUnique(variable),
+  		'UniqueLabel': sortKey,
+  		'TopLabel':sortKey.slice(0,(viewNum-1)),
+		'TopCount':sortCount.slice(0,(viewNum-1)),
+		'TopFrequency':sortFrequency.slice(0,(viewNum-1)),
+		'BottomLabel':sortKey.slice( Object.keys(answer).length-viewNum-1,-1),
+		'BottomCount':sortCount.slice( Object.keys(answer).length-viewNum-1,-1),
+		'BottomFrequency':sortFrequency.slice( Object.keys(answer).length-viewNum-1,-1)
+
+	};
+	if (Object.keys(answer).length>7){
+		dict=dictAbove7;
+	}else {
+    		dict=dictBelow7;
+	}			
+	return dict 
+}
+
+console.log(summaryCategorical(y,viewNum=5))
+
+
+
+function BarPlot(CatVar,Frequency=false,viewNum=7){
+	var SumStat=summaryCategorical(CatVar,viewNum)
+	var x=SumStat['UniqueLabel']
+	if (Frequency==false){
+		var data = [
+  			{
+    				x: x,
+    				y: SumStat['LabelCount'],
+    				type: 'bar'
+ 			 }
+		];
+	}
+	if (Frequency==true){
+		var data = [
+  			{
+    				x: x,
+    				y: SumStat['LabelFrequency'],
+    				type: 'bar'
+ 			 }
+		];
+	}
+	
+	Plotly.newPlot('myDiv', data);
+}
+
+function PiePlot(CatVar,viewNum=100,DivPos='myDiv'){
+	var SumStat=summaryCategorical(CatVar,viewNum)
+	var data = [
+  		{
+    			values: SumStat['LabelCount'],
+    			labels: SumStat['UniqueLabel'],
+    			type: 'pie'
+ 			 }
+	];
+	Plotly.newPlot(DivPos,data);
+}
+
+var catvar = {
+    'Value': ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'],
+    'Type': 'categorical'
+	};
+
+var contvar = {
+    'Value': [1,2,3,4,5,6,7,8,9,13,11],
+    'Type': 'continuous'
+	};  
+        
+var contvar2 = {
+    'Value': [2,3,3,4,5,6,7,8,9,13,11],
+    'Type': 'continuous'
+	};   
+        
+var groupvar = {
+    'Value': ['A','A','B','B','B','B','C','C','C','A','D'],
+    'Type': 'continuous'
+	};         
+        
+//y = ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'];
+function ScatterOrLineOrBarPlot(Var1,Var2,Line=true,Bar=false,Size=14,Opacity=1,Switch=false,ShowAllXTick=true,DivPos='myDiv'){
+    var ShowAllXTick=ShowAllXTick;
+    if(Line){var plotmode = 'lines+markers'}else{var plotmode = 'markers'}
+	var trace1 = {
+  			x: Var1.Value,
+  			y: Var2.Value,	
+            mode: plotmode,
+            marker: { size: Size,
+                      opacity: Opacity},
+            line: {dash: 'solid',
+                   opacity: Opacity,
+                   width: Size/3
+            }
+		};
+	if (Var1.Type=='categorical'){
+		var trace1 = {
+  			x: Var1.Value,
+  			y: Var2.Value,	
+            mode: plotmode,
+            marker: { size: Size,
+                      opacity: Opacity},
+            line: {dash: 'solid',
+                   opacity: Opacity,
+                   width: Size/3
+            }
+		};};
+	
+	if (Var2.Type=='categorical'){
+		var trace1 = {
+  			x: Var2.Value,
+  			y: Var1.Value,	
+            mode: plotmode,
+            marker: { size: Size,
+                      opacity: Opacity},
+            line: {dash: 'solid',
+                   opacity: Opacity,
+                   width: Size/3
+            }
+		};};
+	if(Var1.Type!='categorical'&&Var2.Type!='categorical'){
+		if(Switch==true){
+			var trace1 = {
+  			x: Var2.Value,
+  			y: Var1.Value,
+            mode: plotmode,
+            marker: { size: Size,
+                      opacity: Opacity },
+            line: {dash: 'solid',
+                   opacity: Opacity,
+                   width: Size/3
+            }
+		};
+		};
+	};
+    var layout = {
+        xaxis: {
+            autotick: !ShowAllXTick
+        }
+    };
+    if (Bar){trace1.type='bar'}
+	var data = [trace1];
+	Plotly.newPlot(DivPos,data,layout);
+}
+//console.log(contvar.Type)
+
+function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3,Line=true,Bar=false,Size=14,Opacity=1,Switch=false,ShowAllXTick=true,viewNum=10,DivPos='myDiv'){
+    if(Line){var plotmode = 'Lines+markers'}else{var plotmode = 'markers'}
+    var LegendVar=summaryCategorical(Var3.Value,viewNum);
+    var UniqueLabel=LegendVar['UniqueLabel'];
+    var TotalUniqueLabel=LegendVar['Level'];
+    var data=[];
+    for (let i = 0; i < UniqueLabel.length; i++) {
+        var trace={x:[],
+             y:[],
+             mode:plotmode,
+             name:UniqueLabel[i],
+             marker: {  size:Size,
+                        opacity: Opacity},
+             line: {dash: 'solid',
+                    opacity: Opacity,
+                    width: Size/3
+            }};
+        var position=Var3.Value.allIndexOf(UniqueLabel[i]);
+        var xTemp=[];
+        var yTemp=[];
+        position.forEach(function(element) {
+            xTemp.push(Var1.Value[element]);
+            yTemp.push(Var2.Value[element]);
+        });
+        trace.x=xTemp;
+        trace.y=yTemp;
+        
+        data.push(trace);
+    };
+    var layout = {
+        xaxis: {
+            autotick: !ShowAllXTick
+        }
+    };
+    
+	Plotly.newPlot(DivPos,data,layout);
+}        
+  
         
         
+ var LegendVar=summaryCategorical(catvar.Value,viewNum=7);
+    var UniqueLabel=LegendVar['UniqueLabel'];
+    var TotalUniqueLabel=LegendVar['Level'];        
+var data=[];
+    for (let i = 0; i < UniqueLabel.length; i++) {
+        var trace={x:[],
+             y:[]};
+        var position=catvar.Value.allIndexOf(UniqueLabel[i]);
+        var xTemp=[];
+        var yTemp=[];
+        position.forEach(function(element) {
+            xTemp.push(contvar2.Value[element]);
+            yTemp.push(contvar.Value[element]);
+        });
+        trace.x=xTemp;
+        trace.y=yTemp;
+        
+        data.push(trace);
+    }
+       console.log(data) 
+   //ScatterOrLineOrBarPlotForThree(catvar,contvar2,groupvar,Line=true,Bar=true,Size=15,Opacity=1,Switch=true,ShowAllXTick=true) 
+      //ScatterOrLineOrBarPlot(contvar2,contvar,Line=false,Bar=true,Size=10,Opacity=10,Switch=true,ShowAllXTick=true) 
+
+CdfPlot([2,3,4,2,13,2,4,5,7,8,9,23,25,34,36,22,33,1,2,15,23,53,63])
+PdfPlot([2,3,4,2,13,2,4,5,7,8,9,23,25,34,36,22,33,1,2,15,23,53,63],Normalized=true)
+ScatterOrLineOrBarPlot(contvar2,contvar,line=false,bar=false,Switch=true,ShowAllXTick=true)
+//PiePlot(y)
+//BarPlot(y,Frequency=true) 
 </script>
