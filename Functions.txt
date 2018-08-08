@@ -64,4 +64,253 @@ function summaryCategorical(variable,viewNum) {
 	return dict 
 }
 
+function OrderByCat(DictDat,CatCol,SelCat){
+    var SelDict=DictDat.filter(function(obj) {
+        return obj[CatCol] == SelCat;
+    });
+    return SelDict
+};
+
+//Prototype of AllIndexOf function
+(function(){
+  Array.prototype.allIndexOf = function(searchElement) {
+    if (this === null) { return [-1]; }
+    var len = this.length,
+    hasIndexOf = Array.prototype.indexOf, // you know, because of IE
+    i = (hasIndexOf) ? this.indexOf(searchElement) : 0,
+    n,
+    indx = 0,
+    result = [];
+    if (len === 0 || i === -1) { return [-1]; }
+    if (hasIndexOf) {
+      // Array.indexOf does exist
+      for (n = 0; n <= len; n++) {
+        i = this.indexOf(searchElement, indx);
+        if (i !== -1) {
+          indx = i + 1;
+          result.push(i);
+        } else {
+          return result;
+        }
+      }
+      return result;
+    } else {
+    // Array.indexOf doesn't exist
+      for (n = 0; n <= len; n++) {
+        if (this[n] === searchElement) {
+          result.push(n);
+        }
+      }
+      return (result.length > 0) ? result : [-1];
+    }
+  };
+})();
+ 
+
+console.log(JSON.stringify(output, null, 2));
+
+
+
+//Plotly Function
+
+//#1.One Variable
+
+//#1.1 One Contiuous Variable
+
+//#1.1.1 Histogram with Normalized Option
+function PdfPlot(ContVar,Normalized=false,DivPos='myDiv'){
+	var Normalized=Normalized
+	if (Normalized==false){
+		var trace = {
+        	x: ContVar,
+        	type: 'histogram',
+  		};
+   		var data = [trace];
+	}
+	if (Normalized==true){
+		var data = [
+  			{
+    				x: ContVar,
+    				type: 'histogram',
+				histnorm: 'probability',
+				marker: {
+        				color: 'rgb(255,255,100)',
+    				},
+ 			 }
+		];
+	}
+	
+	Plotly.newPlot(DivPos, data);
+};
+
+
+//#1.1.2 Cumulative Density Function Plot
+function CdfPlot(ContVar,DivPos='myDiv'){
+    var trace = {
+    x: ContVar,
+    type: 'histogram',
+	cumulative: {enabled: true}
+  };
+    var data = [trace];
+	Plotly.newPlot(DivPos, data);
+};
+
+//#1.2 One Categorical Variable
+
+function BarPlot(CatVar,Frequency=false,viewNum=7,DivPos='myDiv'){
+	var SumStat=summaryCategorical(CatVar,viewNum)
+	var x=SumStat['UniqueLabel']
+	if (Frequency==false){
+		var data = [
+  			{
+    				x: x,
+    				y: SumStat['LabelCount'],
+    				type: 'bar'
+ 			 }
+		];
+	}
+	if (Frequency==true){
+		var data = [
+  			{
+    				x: x,
+    				y: SumStat['LabelFrequency'],
+    				type: 'bar'
+ 			 }
+		];
+	}
+	
+	Plotly.newPlot(DivPos, data);
+}
+
+
+
+function PiePlot(CatVar,viewNum=100,DivPos='myDiv'){
+	var SumStat=summaryCategorical(CatVar,viewNum)
+	var data = [
+  		{
+    			values: SumStat['LabelCount'],
+    			labels: SumStat['UniqueLabel'],
+    			type: 'pie'
+ 			 }
+	];
+	Plotly.newPlot(DivPos,data);
+}
+
+//#2.Two Variable
+//#2.1 One Categorical Variable and One Continuous Variable & Two Continuous Variables
+
+var contvar = {
+    'Value': [1,2,3,4,5,6,7,8,9,13,11],
+    'Type': 'continuous'
+	};  
+        
+var contvar2 = {
+    'Value': [2,3,3,4,5,6,7,8,9,13,11],
+    'Type': 'continuous'
+	};   
+
+function ScatterOrLineOrBarPlot(Var1,Var2,Line=true,Bar=false,Size=14,Opacity=1,Switch=false,ShowAllXTick=true,DivPos='myDiv'){
+    var ShowAllXTick=ShowAllXTick;
+    if(Line){var plotmode = 'lines+markers'}else{var plotmode = 'markers'}
+	var trace1 = {
+  			x: Var1.Value,
+  			y: Var2.Value,	
+            mode: plotmode,
+            marker: { size: Size,
+                      opacity: Opacity},
+            line: {dash: 'solid',
+                   opacity: Opacity,
+                   width: Size/3
+            }
+		};
+	if (Var1.Type=='categorical'){
+		var trace1 = {
+  			x: Var1.Value,
+  			y: Var2.Value,	
+            mode: plotmode,
+            marker: { size: Size,
+                      opacity: Opacity},
+            line: {dash: 'solid',
+                   opacity: Opacity,
+                   width: Size/3
+            }
+		};};
+	
+	if (Var2.Type=='categorical'){
+		var trace1 = {
+  			x: Var2.Value,
+  			y: Var1.Value,	
+            mode: plotmode,
+            marker: { size: Size,
+                      opacity: Opacity},
+            line: {dash: 'solid',
+                   opacity: Opacity,
+                   width: Size/3
+            }
+		};};
+	if(Var1.Type!='categorical'&&Var2.Type!='categorical'){
+		if(Switch==true){
+			var trace1 = {
+  			x: Var2.Value,
+  			y: Var1.Value,
+            mode: plotmode,
+            marker: { size: Size,
+                      opacity: Opacity },
+            line: {dash: 'solid',
+                   opacity: Opacity,
+                   width: Size/3
+            }
+		};
+		};
+	};
+    var layout = {
+        xaxis: {
+            autotick: !ShowAllXTick
+        }
+    };
+    if (Bar){trace1.type='bar'}
+	var data = [trace1];
+	Plotly.newPlot(DivPos,data,layout);
+}
+//console.log(contvar.Type)
+
+function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3,Line=true,Bar=false,Size=14,Opacity=1,Switch=false,ShowAllXTick=true,viewNum=10,DivPos='myDiv'){
+    if(Line){var plotmode = 'Lines+markers'}else{var plotmode = 'markers'}
+    var LegendVar=summaryCategorical(Var3.Value,viewNum);
+    var UniqueLabel=LegendVar['UniqueLabel'];
+    var TotalUniqueLabel=LegendVar['Level'];
+    var data=[];
+    for (let i = 0; i < UniqueLabel.length; i++) {
+        var trace={x:[],
+             y:[],
+             mode:plotmode,
+             name:UniqueLabel[i],
+             marker: {  size:Size,
+                        opacity: Opacity},
+             line: {dash: 'solid',
+                    opacity: Opacity,
+                    width: Size/3
+            }};
+        var position=Var3.Value.allIndexOf(UniqueLabel[i]);
+        var xTemp=[];
+        var yTemp=[];
+        position.forEach(function(element) {
+            xTemp.push(Var1.Value[element]);
+            yTemp.push(Var2.Value[element]);
+        });
+        trace.x=xTemp;
+        trace.y=yTemp;
+        
+        data.push(trace);
+    };
+    var layout = {
+        xaxis: {
+            autotick: !ShowAllXTick
+        }
+    };
+    
+	Plotly.newPlot(DivPos,data,layout);
+}
+
+
 
