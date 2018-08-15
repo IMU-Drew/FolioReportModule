@@ -521,7 +521,8 @@ function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3) {
     var csvAddress = Object.values(plotProps['csv'][plotProps['csvIndex']]).toString();
     d3.csv(csvAddress, function (data) {
        if (newCsv) {
-         resetStylePlot();
+         newCsv = false;
+         plotProps['colIndex'] = [0, 0, 0];
          var columns = Object.keys(data[0]);
          d3.select('#taskLabel_wrapper').remove()
          tabulate(data,columns);
@@ -532,14 +533,6 @@ function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3) {
        ScatterOrLineOrBarPlot(dataArr);
      });
    }
-   function resetStylePlot() {
-     newCsv = false;
-     plotProps['colIndex'] = [0, 0, 0];
-      styleProps['Size'] = 14;
-      styleProps['Opacity'] = 1;
-      document.querySelector('#size').value = 14;
-      document.querySelector('#opacity').value = 1;
-    }
 
    var styleProps = {
      'Opacity': 1,
@@ -653,7 +646,7 @@ document.querySelector('#gType').onchange = function() {
       }
     }
   }
-  document.querySelector('button').onclick = function() {
+  document.querySelector('fieldset').onchange = function() {
     newPlot();
   }
 
