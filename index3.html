@@ -107,15 +107,13 @@
         <label for="frequency">Frequency</label>
         <input type="checkbox" id="xTick" value="Show All X-Ticks" />
         <label for="sTic">Show All X-Ticks</label>
+        <input type="checkbox" id="opacity" value="Opacity" checked />
+        <label for="opacity">Show Points</label>
       </div>
       <div class="col-sm-2 col-md-6">
         <div class="form-group">
           <label for="size">Size: 14 </label>
           <input type="range" class="form-control-range" id="size">
-        </div>
-        <div class="form-group">
-          <label for="formControlRange">Opacity: 1 </label>
-          <input type="range" class="form-control-range" id="opacity">
         </div>
       </div>
       <!--  <button type="submit" class="btn btn-default">Submit</button> -->
@@ -604,9 +602,12 @@ document.querySelector('#gType').onchange = function() {
   }
   // Listen For changes in opacity range
   document.querySelector('#opacity').onchange = function() {
-    styleProps['Opacity'] = this.value;
-    var el = document.querySelectorAll('.form-group label')[1];
-    el.innerHTML = "Opacity: " + this.value;
+    if (this.checked) {
+      styleProps['Opacity'] = 1;
+    }
+    else {
+      styleProps['Opacity'] = 0;
+    }
   }
   // Listen For changes in size range
   document.querySelector('#size').onchange = function() {
