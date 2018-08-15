@@ -1,7 +1,7 @@
 <head>
-    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>    
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-    <link rel='stylesheet' href='https://cdn.datatables.net/1.10.18/css/jquery.dataTables.min.css'>    
+    <link rel='stylesheet' href='https://cdn.datatables.net/1.10.18/css/jquery.dataTables.min.css'>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css">
@@ -11,26 +11,26 @@
     <script src="https://cdn.rawgit.com/derekeder/csv-to-html-table/master/js/csv_to_html_table.js"></script>
 
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script> 
-    $(document).ready(function() {
-   d3.csv('https://alabama.box.com/shared/static/zqqsa1nbee99v2ah7eyvpru8fbdvgds4.csv',function (data) {
-	var columns = ['BIB_ID','LIBRARY_ID','SUPPRESS_I','CREATE_DAT','UPDATE_DAT']
-    tabulate(data,columns);
-       $('#taskLabel').dataTable();
-});
-});      
-    
-    </script> 
-</head>
- 
-	      
-        
-<body>
     <script>
-var tabulate = function (data,columns) {
-  var table = d3.select('body').append('table').attr('id', 'taskLabel')
-	var thead = table.append('thead')
-	var tbody = table.append('tbody')
+      $(document).ready(function() {
+        d3.csv('https://alabama.box.com/shared/static/zqqsa1nbee99v2ah7eyvpru8fbdvgds4.csv',function (data) {
+         var columns = Object.keys(data[0]);
+         var dataArr = storeDataInArr(data);
+         tabulate(data,columns);
+         $('#taskLabel').dataTable();
+         ScatterOrLineOrBarPlot(dataArr);
+         showCols(columns);
+         showCSVFiles();
+       });
+     });
+   </script>
+</head>
+
+<script>
+  var tabulate = function (data,columns) {
+    var table = d3.select('body').append('table').attr('id', 'taskLabel')
+  	var thead = table.append('thead')
+  	var tbody = table.append('tbody')
 
 	thead.append('tr')
 	  .selectAll('th')
@@ -53,53 +53,117 @@ var tabulate = function (data,columns) {
       .enter()
     .append('td')
       .text(function (d) { return d.value })
-
   return table;
-}
-
-
-          
-
-   
-        
-    </script>    
-    
- </body>
-<div id="myDiv" style="width: 680px; height: 500px;"><!-- Plotly chart will be drawn inside this DIV --></div>
-    <script>
-(function(){
-  Array.prototype.allIndexOf = function(searchElement) {
-    if (this === null) { return [-1]; }
-    var len = this.length,
-    hasIndexOf = Array.prototype.indexOf, // you know, because of IE
-    i = (hasIndexOf) ? this.indexOf(searchElement) : 0,
-    n,
-    indx = 0,
-    result = [];
-    if (len === 0 || i === -1) { return [-1]; }
-    if (hasIndexOf) {
-      // Array.indexOf does exist
-      for (n = 0; n <= len; n++) {
-        i = this.indexOf(searchElement, indx);
-        if (i !== -1) {
-          indx = i + 1;
-          result.push(i);
-        } else {
-          return result;
+  }
+</script>
+<body>
+  <fieldset class="container">
+    <div class="row justify-content-start">
+      <div class="col-sm-5 col-md-2">
+        <h4>Graph Type:</h4>
+        <div>
+          <select id="gType">
+            <option value="line">Line Plot</option>
+            <option value="switch">Switch Plot</option>
+            <option value="bar">Bar Plot</option>
+            <option value="pie">Pie Plot</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-sm-5 col-md-2" id="graph">
+        <h4>Select Data:</h4>
+        <div>
+          <select id="dataSet">
+          </select>
+        </div>
+      </div>
+      <div>
+        <h4>Select Columns To Display: </h4>
+        <div class="col-sm-5 col-md-2" id="graph">
+          <h4></h4>
+          <div>
+            <label for="colX">X-Axis</label>
+            <select id="cols"></select>
+          </div>
+        </div>
+        <div class="col-sm-5 col-md-2" id="graph">
+          <h4></h4>
+          <div>
+            <label for="colY">Y-Axis</label>
+            <select id="cols"></select>
+          </div>
+        </div>
+        <div class="col-sm-5 col-md-2" id="graph">
+          <h4></h4>
+          <div>
+            <label for="colZ">Z-Axis</label>
+            <select id="cols"></select>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-2 col-md-6">
+        <h4>Additional Options</h4>
+        <input type="checkbox" id="frequency" value="Frequency" checked />
+        <label for="frequency">Frequency</label>
+        <input type="checkbox" id="xTick" value="Show All X-Ticks" />
+        <label for="sTic">Show All X-Ticks</label>
+      </div>
+      <div class="col-sm-2 col-md-6">
+        <div class="form-group">
+          <label for="size">Size: 14 </label>
+          <input type="range" class="form-control-range" id="size">
+        </div>
+        <div class="form-group">
+          <label for="formControlRange">Opacity: 1 </label>
+          <input type="range" class="form-control-range" id="opacity">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-default">Submit</button>
+  </fieldset>
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-5 col-md-6">
+        <div id="myDiv" style="width: 680px; height: 500px;">
+          <!-- Plotly chart will be drawn inside this DIV -->
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+<script>
+  (function(){
+    Array.prototype.allIndexOf = function(searchElement) {
+      if (this === null) { return [-1]; }
+      var len = this.length,
+      hasIndexOf = Array.prototype.indexOf, // you know, because of IE
+      i = (hasIndexOf) ? this.indexOf(searchElement) : 0,
+      n,
+      indx = 0,
+      result = [];
+      if (len === 0 || i === -1) { return [-1]; }
+      if (hasIndexOf) {
+        // Array.indexOf does exist
+        for (n = 0; n <= len; n++) {
+          i = this.indexOf(searchElement, indx);
+          if (i !== -1) {
+            indx = i + 1;
+            result.push(i);
+          } else {
+            return result;
+          }
         }
-      }
-      return result;
-    } else {
-    // Array.indexOf doesn't exist
-      for (n = 0; n <= len; n++) {
-        if (this[n] === searchElement) {
-          result.push(n);
+        return result;
+      } else {
+      // Array.indexOf doesn't exist
+        for (n = 0; n <= len; n++) {
+          if (this[n] === searchElement) {
+            result.push(n);
+          }
         }
+        return (result.length > 0) ? result : [-1];
       }
-      return (result.length > 0) ? result : [-1];
-    }
-  };
-})();	    
+    };
+  })();
         var x = [];
 for (var i = 0; i < 180; i ++) {
 	x[i] = Math.random();
@@ -140,7 +204,7 @@ function PdfPlot(ContVar,Normalized=false){
  			 }
 		];
 	}
-	
+
 	Plotly.newPlot('myDiv', data);
 };
 
@@ -157,14 +221,14 @@ function summaryCategorical(variable,viewNum) {
 	var sortCount=[]
 ;
 	var sortFrequency=[];
-	
+
 	for (i = 0; i < Object.keys(answer).length; i++){
-    	
+
 		sortCount.push(answer[sortKey[i]])
-        
+
 		sortFrequency.push(answer[sortKey[i]]/(Object.keys(answer).length))
 
-	};	
+	};
 	function countUnique(iterable) {
   		return new Set(iterable).size;
 	}
@@ -174,7 +238,7 @@ function summaryCategorical(variable,viewNum) {
   		'UniqueLabel': sortKey,
 		'LabelCount':sortCount,
 		'LabelFrequency':sortFrequency
-	};	
+	};
 
 	var dictAbove7 = {
   		'Level': countUnique(variable),
@@ -191,8 +255,8 @@ function summaryCategorical(variable,viewNum) {
 		dict=dictAbove7;
 	}else {
     		dict=dictBelow7;
-	}			
-	return dict 
+	}
+	return dict
 }
 
 console.log(summaryCategorical(y,viewNum=5))
@@ -220,7 +284,7 @@ function BarPlot(CatVar,Frequency=false,viewNum=7){
  			 }
 		];
 	}
-	
+
 	Plotly.newPlot('myDiv', data);
 }
 
@@ -241,130 +305,354 @@ var catvar = {
     'Type': 'categorical'
 	};
 
-var contvar = {
-    'Value': [1,2,3,4,5,6,7,8,9,13,11],
-    'Type': 'continuous'
-	};  
-        
-var contvar2 = {
-    'Value': [2,3,3,4,5,6,7,8,9,13,11],
-    'Type': 'continuous'
-	};   
-        
 var groupvar = {
     'Value': ['A','A','B','B','B','B','C','C','C','A','D'],
     'Type': 'continuous'
-	};         
-        
-//y = ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'];
-function ScatterOrLineOrBarPlot(Var1,Var2,Line=true,Bar=false,Size=14,Opacity=1,Switch=false,ShowAllXTick=true,DivPos='myDiv'){
-    var ShowAllXTick=ShowAllXTick;
-    if(Line){var plotmode = 'lines+markers'}else{var plotmode = 'markers'}
-	var trace1 = {
-  			x: Var1.Value,
-  			y: Var2.Value,	
-            mode: plotmode,
-            marker: { size: Size,
-                      opacity: Opacity},
-            line: {dash: 'solid',
-                   opacity: Opacity,
-                   width: Size/3
-            }
-		};
-	if (Var1.Type=='categorical'){
-		var trace1 = {
-  			x: Var1.Value,
-  			y: Var2.Value,	
-            mode: plotmode,
-            marker: { size: Size,
-                      opacity: Opacity},
-            line: {dash: 'solid',
-                   opacity: Opacity,
-                   width: Size/3
-            }
-		};};
-	
-	if (Var2.Type=='categorical'){
-		var trace1 = {
-  			x: Var2.Value,
-  			y: Var1.Value,	
-            mode: plotmode,
-            marker: { size: Size,
-                      opacity: Opacity},
-            line: {dash: 'solid',
-                   opacity: Opacity,
-                   width: Size/3
-            }
-		};};
-	if(Var1.Type!='categorical'&&Var2.Type!='categorical'){
-		if(Switch==true){
-			var trace1 = {
-  			x: Var2.Value,
-  			y: Var1.Value,
-            mode: plotmode,
-            marker: { size: Size,
-                      opacity: Opacity },
-            line: {dash: 'solid',
-                   opacity: Opacity,
-                   width: Size/3
-            }
-		};
-		};
 	};
-    var layout = {
-        xaxis: {
-            autotick: !ShowAllXTick
-        }
+
+//y = ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'];
+function ScatterOrLineOrBarPlot(dataArr) {
+  var keys = Object.keys(dataArr);
+  var val = dataArr[keys[plotProps['colIndex'][0]]];
+  var val1 = dataArr[keys[plotProps['colIndex'][1]]];
+  var set = {
+    Value: val,
+    Type: plotProps['type'][0]
+  };
+  var set1 = {
+    Value: val1,
+    Type: plotProps['type'][1]
+  };
+
+  if (plotProps['Line']) {
+    var plotmode = 'lines+markers'
+  } else {
+    var plotmode = 'markers'
+  }
+  var trace1 = {
+    x: set.Value,
+    y: set1.Value,
+    mode: plotmode,
+    marker: {
+      size: styleProps['Size'],
+      opacity: styleProps['Opacity']
+    },
+    line: {
+      dash: 'solid',
+      opacity: styleProps['Opacity'],
+      width: styleProps['Size'] / 3
+    }
+  };
+  if (set.Type == 'categorical') {
+    var trace1 = {
+      x: set.Value,
+      y: set1.Value,
+      mode: plotmode,
+      marker: {
+        size: styleProps['Size'],
+        opacity: styleProps['Opacity']
+      },
+      line: {
+        dash: 'solid',
+        opacity: styleProps['Opacity'],
+        width: styleProps['Size'] / 3
+      }
     };
-    if (Bar){trace1.type='bar'}
-	var data = [trace1];
-	Plotly.newPlot(DivPos,data,layout);
+  };
+
+  if (set.Type == 'categorical') {
+    var trace1 = {
+      x: set.Value,
+      y: set1.Value,
+      mode: plotmode,
+      marker: {
+        size: styleProps['Size'],
+        opacity: styleProps['Opacity']
+      },
+      line: {
+        dash: 'solid',
+        opacity: styleProps['Opacity'],
+        width: styleProps['Size'] / 3
+      }
+    };
+  };
+  if (set1.Type != 'categorical' && set2.Type != 'categorical') {
+    if (plotProps['Switch'] == true) {
+      var trace1 = {
+        x: set.Value,
+        y: set1.Value,
+        mode: plotmode,
+        marker: {
+          size: styleProps['Size'],
+          opacity: styleProps['Opacity']
+        },
+        line: {
+          dash: 'solid',
+          opacity: styleProps['Opacity'],
+          width: styleProps['Size'] / 3
+        }
+      };
+    };
+  };
+  if (plotProps['Bar']) {
+    trace1.type = 'bar'
+  }
+  var layout = {
+    xaxis: {
+      autotick: !plotProps['ShowAllXTick']
+    }
+  };
+  var data = [trace1];
+  Plotly.newPlot('myDiv', data, layout);
 }
 //console.log(contvar.Type)
 
-function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3,Line=true,Bar=false,Size=14,Opacity=1,Switch=false,ShowAllXTick=true,viewNum=10,DivPos='myDiv'){
-    if(Line){var plotmode = 'Lines+markers'}else{var plotmode = 'markers'}
-    var LegendVar=summaryCategorical(Var3.Value,viewNum);
-    var UniqueLabel=LegendVar['UniqueLabel'];
-    var TotalUniqueLabel=LegendVar['Level'];
-    var data=[];
-    for (let i = 0; i < UniqueLabel.length; i++) {
-        var trace={x:[],
-             y:[],
-             mode:plotmode,
-             name:UniqueLabel[i],
-             marker: {  size:Size,
-                        opacity: Opacity},
-             line: {dash: 'solid',
-                    opacity: Opacity,
-                    width: Size/3
-            }};
-        var position=Var3.Value.allIndexOf(UniqueLabel[i]);
-        var xTemp=[];
-        var yTemp=[];
-        position.forEach(function(element) {
-            xTemp.push(Var1.Value[element]);
-            yTemp.push(Var2.Value[element]);
-        });
-        trace.x=xTemp;
-        trace.y=yTemp;
-        
-        data.push(trace);
+function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3) {
+  set1 = {
+    Value: Var1,
+    Type: type1
+  };
+  set2 = {
+    Value: Var2,
+    Type: type2
+  };
+  set3 = {
+    Value: Var3,
+    Type: type3
+  };
+  if (Line) {
+    var plotmode = 'Lines+markers'
+  } else {
+    var plotmode = 'markers'
+  }
+  var LegendVar = summaryCategorical(Var3.Value, viewNum);
+  var UniqueLabel = LegendVar['UniqueLabel'];
+  var TotalUniqueLabel = LegendVar['Level'];
+  var data = [];
+  for (let i = 0; i < UniqueLabel.length; i++) {
+    var trace = {
+      x: [],
+      y: [],
+      mode: plotmode,
+      name: UniqueLabel[i],
+      marker: {
+        size: Size,
+        opacity: Opacity
+      },
+      line: {
+        dash: 'solid',
+        opacity: Opacity,
+        width: Size / 3
+      }
     };
-    var layout = {
-        xaxis: {
-            autotick: !ShowAllXTick
-        }
-    };
-    
-	Plotly.newPlot(DivPos,data,layout);
-}        
-  
-        
-        
+    var position = set3.Value.allIndexOf(UniqueLabel[i]);
+    var xTemp = [];
+    var yTemp = [];
+    position.forEach(function(element) {
+      xTemp.push(set1.Value[element]);
+      yTemp.push(set2.Value[element]);
+    });
+    trace.x = xTemp;
+    trace.y = yTemp;
+
+    data.push(trace);
+  };
+  var layout = {
+    xaxis: {
+      autotick: !ShowAllXTick
+    }
+  };
+
+  Plotly.newPlot(DivPos, data, layout);
+}
+
+// Get CSV names from array and display them on page
+  function showCSVFiles() {
+    var csv = plotProps['csv'];
+    var select = document.querySelector('select#dataSet');
+    for (var i=0; i<csv.length; i++) {
+      var key = Object.keys(csv[i]).toString();
+      var option = document.createElement('option');
+      var content = document.createTextNode(key);
+      option.appendChild(content);
+      var attr = document.createAttribute('value');
+      attr.value = key;
+      option.setAttributeNode(attr);
+      select.append(option);
+    }
+  }
+  function showCols(col) {
+    d3.selectAll('#axis').remove()
+    var select = document.querySelectorAll('select#cols');
+    for (var i=0; i<select.length; i++) {
+      for (var j=0; j<col.length; j++) {
+        var option = document.createElement('option');
+        var content = document.createTextNode(col[j]);
+        option.appendChild(content);
+        var attr = document.createAttribute('value');
+        attr.value = col[j];
+        option.setAttributeNode(attr);
+        var attrId = document.createAttribute('id');
+        attrId.value = 'axis';
+        option.setAttributeNode(attrId);
+        select[i].append(option);
+      }
+    }
+  }
+  function storeDataInArr(data) {
+    var key = Object.keys(data[0]);
+    var dataArr = {};
+    for (var i = 0; i < data.length; i++) {
+      for (var obj in data[i]) {
+        dataArr[obj] = [];
+        key.push(obj);
+      }
+    }
+    // Store values in arrays
+    for (var i = 0; i < data.length; i++) {
+      for (var obj in data[i]) {
+        dataArr[obj].push(data[i][obj]);
+      }
+    }
+    return dataArr;
+  }
+// Change CSV data
+  function newPlot() {
+    var csvAddress = Object.values(plotProps['csv'][plotProps['csvIndex']]).toString();
+    d3.csv(csvAddress, function (data) {
+       if (newCsv) {
+         newCsv = false;
+         plotProps['colIndex'] = [0, 0, 0];
+         var columns = Object.keys(data[0]);
+         d3.select('#taskLabel_wrapper').remove()
+         tabulate(data,columns);
+         $('#taskLabel').dataTable();
+         showCols(columns);
+       }
+       var dataArr = storeDataInArr(data);
+       ScatterOrLineOrBarPlot(dataArr);
+     });
+   }
+
+   var styleProps = {
+     'Opacity': 1,
+     'Size': 14,
+     'Normalized': true
+   };
+
+   // var csvAddress = Object.values(plotProps['csv'][plotProps['csvIndex']]).toString();
+   var plotProps = {
+     'csv':
+     [
+       {
+         'Circulation': 'https://alabama.box.com/shared/static/zqqsa1nbee99v2ah7eyvpru8fbdvgds4.csv'
+       },
+       {
+         'Oscar Ages': 'https://people.sc.fsu.edu/~jburkardt/data/csv/oscar_age_female.csv'
+       },
+       {
+         'Car Accidents': 'https://people.sc.fsu.edu/~jburkardt/data/csv/crash_catalonia.csv'
+       },
+       {
+         'Hurricanes': 'https://people.sc.fsu.edu/~jburkardt/data/csv/hurricanes.csv'
+       },
+       {
+         'Deaths': '	https://data.cdc.gov/api/views/rpjd-ejph/rows.csv?accessType=DOWNLOAD'
+       }
+
+     ],
+     'csvIndex': 0,
+     'colIndex': [0, 0, 0],
+     'Pie': false,
+     'Line': true,
+     'Frequency': true,
+     'Bar': false,
+     'Switch': false,
+     'ShowAllXTick': false,
+     'type': ['categorical', 'categorical'],
+   };
+   var newCsv = false;
+
+   document.querySelector('#size').value = 14;
+document.querySelector('#opacity').value = 1;
+
+document.querySelector('#gType').onchange = function() {
+  plotProps['Switch'] = false;
+  plotProps['Line'] = false;
+  plotProps['Bar'] = false;
+  plotProps['Pie'] = false;
+
+  if (this.value === 'switch') {
+    plotProps['Switch'] = true;
+  }
+  if (this.value === 'line') {
+    plotProps['Line'] = true;
+  }
+  if (this.value === 'bar') {
+    plotProps['Bar'] = true;
+  }
+  if (this.value === 'pie') {
+    plotProps['Pie'] = true;
+  }
+}
+  // Listen for changes in frequency option
+  document.querySelector('#frequency').onchange = function() {
+    plotProps['Frequency'] = this.checked;
+  }
+  // Listen For changes in xTick option
+  document.querySelector('#xTick').onchange = function() {
+    plotProps['ShowAllXTick'] = this.checked;
+  }
+  // Listen For changes in opacity range
+  document.querySelector('#opacity').onchange = function() {
+    styleProps['Opacity'] = this.value;
+    var el = document.querySelectorAll('.form-group label')[1];
+    el.innerHTML = "Opacity: " + this.value;
+  }
+  // Listen For changes in size range
+  document.querySelector('#size').onchange = function() {
+    styleProps['Size'] = this.value;
+    var el = document.querySelectorAll('.form-group label')[0];
+    el.innerHTML = "Size: " + this.value;
+  }
+  // Listen for changes in csv
+  document.querySelector('select#dataSet').onchange = function() {
+    newCsv = true;
+    plotProps['csvIndex'] = this.selectedIndex;
+    // newPlot(Object.values(csvNameUrl[this.selectedIndex]).toString(), this.selectedIndex);
+    }
+  document.querySelectorAll('select#cols')[0].onchange = function() {
+    var select = document.querySelectorAll('select#cols')[0];
+    for (var i=0; i<select.length; i++) {
+      if (select.children[i].value === this.value) {
+        plotProps['colIndex'][0] = i;
+      }
+    }
+
+  }
+  document.querySelectorAll('select#cols')[1].onchange = function() {
+    var select = document.querySelectorAll('select#cols')[1];
+    for (var i=0; i<select.length; i++) {
+      if (select.children[i].value === this.value) {
+        plotProps['colIndex'][1] = i;
+      }
+    }
+  }
+  document.querySelectorAll('select#cols')[2].onchange = function() {
+    var select = document.querySelectorAll('select#cols')[2];
+    for (var i=0; i<select.length; i++) {
+      if (select.children[i].value === this.value) {
+        plotProps['colIndex'][2] = i;
+      }
+    }
+  }
+  document.querySelector('button').onclick = function() {
+    newPlot();
+  }
+
  var LegendVar=summaryCategorical(catvar.Value,viewNum=7);
     var UniqueLabel=LegendVar['UniqueLabel'];
-    var TotalUniqueLabel=LegendVar['Level'];        
+    var TotalUniqueLabel=LegendVar['Level'];
 var data=[];
     for (let i = 0; i < UniqueLabel.length; i++) {
         var trace={x:[],
@@ -378,16 +666,15 @@ var data=[];
         });
         trace.x=xTemp;
         trace.y=yTemp;
-        
+
         data.push(trace);
     }
-       console.log(data) 
-   //ScatterOrLineOrBarPlotForThree(catvar,contvar2,groupvar,Line=true,Bar=true,Size=15,Opacity=1,Switch=true,ShowAllXTick=true) 
-      //ScatterOrLineOrBarPlot(contvar2,contvar,Line=false,Bar=true,Size=10,Opacity=10,Switch=true,ShowAllXTick=true) 
+       console.log(data)
+   //ScatterOrLineOrBarPlotForThree(catvar,contvar2,groupvar,Line=true,Bar=true,Size=15,Opacity=1,Switch=true,ShowAllXTick=true)
+      //ScatterOrLineOrBarPlot(contvar2,contvar,Line=false,Bar=true,Size=10,Opacity=10,Switch=true,ShowAllXTick=true)
 
-CdfPlot([2,3,4,2,13,2,4,5,7,8,9,23,25,34,36,22,33,1,2,15,23,53,63])
-PdfPlot([2,3,4,2,13,2,4,5,7,8,9,23,25,34,36,22,33,1,2,15,23,53,63],Normalized=true)
-ScatterOrLineOrBarPlot(contvar2,contvar,line=false,bar=false,Switch=true,ShowAllXTick=true)
+//CdfPlot([2,3,4,2,13,2,4,5,7,8,9,23,25,34,36,22,33,1,2,15,23,53,63])
+//PdfPlot([2,3,4,2,13,2,4,5,7,8,9,23,25,34,36,22,33,1,2,15,23,53,63],Normalized=true)
 //PiePlot(y)
-//BarPlot(y,Frequency=true) 
+//BarPlot(y,Frequency=true)
 </script>
