@@ -521,8 +521,7 @@ function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3) {
     var csvAddress = Object.values(plotProps['csv'][plotProps['csvIndex']]).toString();
     d3.csv(csvAddress, function (data) {
        if (newCsv) {
-         newCsv = false;
-         plotProps['colIndex'] = [0, 0, 0];
+         resetStylePlot();
          var columns = Object.keys(data[0]);
          d3.select('#taskLabel_wrapper').remove()
          tabulate(data,columns);
@@ -533,6 +532,14 @@ function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3) {
        ScatterOrLineOrBarPlot(dataArr);
      });
    }
+   function resetStylePlot() {
+     newCsv = false;
+     plotProps['colIndex'] = [0, 0, 0];
+      styleProps['Size'] = 14;
+      styleProps['Opacity'] = 1;
+      document.querySelector('#size').value = 14;
+      document.querySelector('#opacity').value = 1;
+    }
 
    var styleProps = {
      'Opacity': 1,
@@ -650,7 +657,7 @@ document.querySelector('#gType').onchange = function() {
     newPlot();
   }
 
- var LegendVar=summaryCategorical(catvar.Value,viewNum=7);
+ /*var LegendVar=summaryCategorical(catvar.Value,viewNum=7);
     var UniqueLabel=LegendVar['UniqueLabel'];
     var TotalUniqueLabel=LegendVar['Level'];
 var data=[];
@@ -669,7 +676,7 @@ var data=[];
 
         data.push(trace);
     }
-       console.log(data)
+       console.log(data)*/
    //ScatterOrLineOrBarPlotForThree(catvar,contvar2,groupvar,Line=true,Bar=true,Size=15,Opacity=1,Switch=true,ShowAllXTick=true)
       //ScatterOrLineOrBarPlot(contvar2,contvar,Line=false,Bar=true,Size=10,Opacity=10,Switch=true,ShowAllXTick=true)
 
