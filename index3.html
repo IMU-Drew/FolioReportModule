@@ -56,6 +56,7 @@
   return table;
   }
 </script>
+
 <body>
   <fieldset class="container">
     <div class="row justify-content-start">
@@ -113,19 +114,27 @@
       <div class="col-sm-2 col-md-6">
         <div class="form-group">
           <label for="size">Size: 14 </label>
-          <input type="range" class="form-control-range" id="size">
+          <input type="range" class="form-control-range" value="14" id="size">
         </div>
+        <div class="form-group">
+          <label for="height">Height: 500 </label>
+          <input type="range" min="400" max="2000" value="500" class="form-control-range" id="height" >
+        </div>
+        <div class="form-group">
+          <label for="height">Width: 500 </label>
+          <input type="range" "range" min="400" max="2000" value="500" class="form-control-range" id="width">
+        </div>
+        <!--<div class="form-group">
+          <label for="formControlRange">Opacity: 1 </label>
+          <input type="range" class="form-control-range" id="opacity">
+        </div>-->
       </div>
       <!--  <button type="submit" class="btn btn-default">Submit</button> -->
   </fieldset>
   <div class="container">
-    <div class="row">
-      <div class="col-sm-5 col-md-6">
-        <div id="myDiv" style="width: 680px; height: 500px;">
+        <div id="myDiv">
           <!-- Plotly chart will be drawn inside this DIV -->
         </div>
-      </div>
-    </div>
   </div>
 </body>
 <script>
@@ -286,29 +295,25 @@ function BarPlot(CatVar,Frequency=false,viewNum=7){
 	Plotly.newPlot('myDiv', data);
 }
 
-function PiePlot(CatVar,viewNum=100,DivPos='myDiv'){
-	var SumStat=summaryCategorical(CatVar,viewNum)
-	var data = [
-  		{
-    			values: SumStat['LabelCount'],
-    			labels: SumStat['UniqueLabel'],
-    			type: 'pie'
- 			 }
-	];
-	Plotly.newPlot(DivPos,data);
+  function PiePlot(CatVar,viewNum=100,DivPos='myDiv'){
+    var keys = Object.keys(CatVar);
+    var val = CatVar[keys[plotProps['colIndex'][0]]];
+    var SumStat=summaryCategorical(val,viewNum);
+  	var data = [
+    		{
+      			values: SumStat['TopCount'],
+      			labels: SumStat['UniqueLabel'],
+      			type: 'pie'
+   			 }
+  	];
+    var layout = {
+      autosize: false,
+      width: plotProps['Width'],
+      height: plotProps['Height'],
+    };
+	  Plotly.newPlot(DivPos,data, layout);
 }
 
-var catvar = {
-    'Value': ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'],
-    'Type': 'categorical'
-	};
-
-var groupvar = {
-    'Value': ['A','A','B','B','B','B','C','C','C','A','D'],
-    'Type': 'continuous'
-	};
-
-//y = ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'];
 function ScatterOrLineOrBarPlot(dataArr) {
   var keys = Object.keys(dataArr);
   var val = dataArr[keys[plotProps['colIndex'][0]]];
@@ -396,6 +401,9 @@ function ScatterOrLineOrBarPlot(dataArr) {
     trace1.type = 'bar'
   }
   var layout = {
+    autosize: false,
+    width: plotProps['Width'],
+    height: plotProps['Height'],
     xaxis: {
       autotick: !plotProps['ShowAllXTick']
     }
@@ -528,7 +536,12 @@ function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3) {
          showCols(columns);
        }
        var dataArr = storeDataInArr(data);
-       ScatterOrLineOrBarPlot(dataArr);
+       if (plotProps['Pie']) {
+         PiePlot(dataArr);
+       }
+       else {
+         ScatterOrLineOrBarPlot(dataArr);
+       }
      });
    }
 
@@ -555,6 +568,12 @@ function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3) {
        },
        {
          'Deaths': '	https://data.cdc.gov/api/views/rpjd-ejph/rows.csv?accessType=DOWNLOAD'
+       },
+       {
+         'Baby Names': 'https://data.cityofnewyork.us/api/views/25th-nujf/rows.csv?accessType=DOWNLOAD'
+       },
+       {
+         'Colleges':'https://ed-public-download.app.cloud.gov/downloads/Most-Recent-Cohorts-Scorecard-Elements.csv'
        }
 
      ],
@@ -567,6 +586,8 @@ function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3) {
      'Switch': false,
      'ShowAllXTick': false,
      'type': ['categorical', 'categorical'],
+     'Height': 500,
+     'Width': 500
    };
    var newCsv = false;
 
@@ -615,6 +636,16 @@ document.querySelector('#gType').onchange = function() {
     var el = document.querySelectorAll('.form-group label')[0];
     el.innerHTML = "Size: " + this.value;
   }
+  document.querySelector('#height').onchange = function() {
+    plotProps['Height'] = this.value;
+    var el = document.querySelectorAll('.form-group label')[1];
+    el.innerHTML = "Height: " + this.value;
+  }
+  document.querySelector('#width').onchange = function() {
+    plotProps['Width'] = this.value;
+    var el = document.querySelectorAll('.form-group label')[2];
+    el.innerHTML = "Width: " + this.value;
+  }
   // Listen for changes in csv
   document.querySelector('select#dataSet').onchange = function() {
     newCsv = true;
@@ -628,7 +659,6 @@ document.querySelector('#gType').onchange = function() {
         plotProps['colIndex'][0] = i;
       }
     }
-
   }
   document.querySelectorAll('select#cols')[1].onchange = function() {
     var select = document.querySelectorAll('select#cols')[1];
