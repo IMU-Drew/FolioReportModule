@@ -3,7 +3,18 @@
   <head>
     <meta charset="utf-8" />
     <title>Folio - Subject Visualization</title>
+    <link rel="stylesheet" href="css/subject-visualization.css" />
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> <!-- Plotly.js -->
   </head>
   <body>
+    <div id="plotly-bar-chart">
+      <!-- The Plotly bar chart will be drawn inside this div. -->
+    </div>
+
+    <!-- The main class data is displayed initially, so don't display the back button. -->
+    <button id="back-button" class="no-show">Back</button>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script> <!-- jQuery -->
+    <script src="js/subject-visualization.js"></script> <!-- Main script -->
   </body>
 </html>
