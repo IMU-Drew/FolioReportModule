@@ -65,6 +65,8 @@ var tabulate = function (data,columns) {
     </script>    
     
  </body>
+
+
 <div id="myDiv" style="width: 680px; height: 500px;"><!-- Plotly chart will be drawn inside this DIV --></div>
     <script>
 (function(){
@@ -100,50 +102,77 @@ var tabulate = function (data,columns) {
     }
   };
 })();	    
-        var x = [];
-for (var i = 0; i < 180; i ++) {
-	x[i] = Math.random();
+
+
+//Some Arbitrary test data#####################################################################################################
+var y = ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'];
+var catvar = {
+    'Value': ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'],
+    'Type': 'categorical',
+    'Name': 'catvar'
+	};
+
+var contvar = {
+    'Value': [1,2,3,4,5,6,7,8,9,13,11],
+    'Type': 'continuous',
+    'Name': 'convar'
+	};  
+        
+var contvar2 = {
+    'Value': [2,3,3,4,5,6,7,8,9,13,11],
+    'Type': 'continuous',
+    'Name': 'contvar2'
+	};   
+        
+var groupvar = {
+    'Value': ['A','A','B','B','B','B','C','C','C','A','D'],
+    'Type': 'continuous',
+    'Name': 'groupvar'
+	};      
+var testCont = {
+    'Value': [16, 15, 12, 6, 5, 4, 42,27, 11, 25, 8, 1, 3, 25],
+    'Type': 'continuous',
+    'Name': 'testCont'
+	};   
+        
+var testCat1 = {
+    'Value': ['US', 'China', 'European Union', 'Russian Federation', 'Brazil', 'India', 'Rest of World','US', 'China', 'European Union', 'Russian Federation', 'Brazil', 'India', 'Rest of World'],
+    'Type': 'categorical',
+    'Name': 'groupvar1'
+	}; 
+var testCat2 = {
+    'Value': ['A', 'A', 'A', 'C', 'C', 'C', 'D','B', 'B', 'B', 'B', 'D', 'D', 'D'],
+    'Type': 'categorical',
+    'Name': 'groupvar2'
+	};    
+//##############################################################################################################################   
+//###########################           Functions needed                    ####################################################           
+//##############################################################################################################################   
+//##############################################################################################################################       
+  //821 Combination Function
+
+function Combination(Var1, Var2){
+    combos = [] //or combos = new Array(2);
+    for(var i = 0; i < Var1.length; i++)
+    {
+        for(var j = 0; j < Var2.length; j++)
+        {
+        combos.push(Var1[i] +':'+ Var2[j])
+        }
+    }
+    return combos
 }
 
-
-var y = ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'];
-
-function CdfPlot(ContVar){
-    var trace = {
-    x: ContVar,
-    type: 'histogram',
-	cumulative: {enabled: true}
-  };
-    var data = [trace];
-	Plotly.newPlot('myDiv', data);
-};
-
-
-function PdfPlot(ContVar,Normalized=false){
-	var Normalized=Normalized
-	if (Normalized==false){
-		var trace = {
-        	x: ContVar,
-        	type: 'histogram',
-  		};
-   		var data = [trace];
-	}
-	if (Normalized==true){
-		var data = [
-  			{
-    				x: ContVar,
-    				type: 'histogram',
-				histnorm: 'probability',
-				marker: {
-        				color: 'rgb(255,255,100)',
-    				},
- 			 }
-		];
-	}
-	
-	Plotly.newPlot('myDiv', data);
-};
-
+//Find minimal value's position Function
+function indexOfSmallest(a) {
+ var lowest = 0;
+ for (var i = 1; i < a.length; i++) {
+  if (a[i] < a[lowest]) lowest = i;
+ }
+ return lowest;
+}      
+        
+//Summary function for categorical variable
 function summaryCategorical(variable,viewNum) {
 	var array = variable;
 	function countDuplicates(obj, num){
@@ -193,9 +222,66 @@ function summaryCategorical(variable,viewNum) {
     		dict=dictBelow7;
 	}			
 	return dict 
-}
+}        
+        
+        
+//##############################################################################################################################   
+//#####################           Pre-defined Inventory          ###############################################################      
+//##############################################################################################################################   
+//##############################################################################################################################   
+        
+//8.16 Add Var.Name; Add Bar option; Add Shape options;ColorRef
+        
+var ShapeInventory=["circle", "square", "diamond","cross", "x","square-open","circle-open","diamond-open","star-dot","hexagram-open","triangle-sw","triangle-up-open","triangle-left-open","triangle-left-dot","bowtie","diamond-x","triangle-down-open","circle-cross","star-square-open-dot","star-diamond-dot","hexagon","triangle-nw-open-dot","circle-x","triangle-down","triangle-se-open","square-cross-open","triangle-up-open-dot","triangle-se-dot","diamond-wide","triangle-left","pentagon-open-dot","triangle-left-open-dot","pentagon-dot","diamond-cross-open","cross-thin","star-open","cross-thin-open","asterisk","bowtie-open","cross-open-dot","hash-open","star-triangle-down","diamond-dot","diamond-wide-open-dot","star-diamond-open-dot","triangle-ne-open-dot","circle-cross-open","triangle-sw-dot","triangle-se","octagon-open","cross-open","diamond-tall-dot","triangle-ne","star-square","hexagram-dot","triangle-up-dot","star","star-triangle-down-dot","triangle-down-dot","octagon","star-triangle-up-dot","star-diamond-open","triangle-down-open-dot","circle-open-dot","triangle-sw-open-dot","octagon-dot","triangle-right-open","star-triangle-up","star-triangle-down-open","hexagon-open","triangle-up","triangle-sw-open","diamond-tall","square-x","pentagon","octagon-open-dot","star-triangle-down-open-dot","triangle-nw","star-open-dot","hexagram-open-dot","diamond-tall-open","diamond-wide-dot","star-diamond","circle-dot","diamond-open-dot","square-cross","triangle-nw-dot","triangle-right","cross-dot","diamond-cross","triangle-nw-open","hash-dot","hexagon-open-dot","diamond-tall-open-dot","triangle-ne-open","square-dot","hexagram","hexagon-dot","hourglass","triangle-right-dot","triangle-right-open-dot","star-square-dot","star-square-open","hash","star-triangle-up-open-dot","asterisk-open","hourglass-open","pentagon-open","hash-open-dot","triangle-ne-dot","star-triangle-up-open","diamond-wide-open","triangle-se-open-dot"]        
+var ColorRef=['#1f77b4', '#ff7f0e',  '#2ca02c','#d62728','#9467bd', '#8c564b','#e377c2', '#7f7f7f','#bcbd22', '#17becf',"#7CFC00","#DAA520","#006400","#00FFFF","#FFD700","#008B8B","#CD5C5C","#483D8B","#3CB371","#AFEEEE","#BA55D3","#32CD32","#00FF00","#ADD8E6","#00FA9A","#DEB887","#C71585","#228B22","#F0E68C","#FF8C00","#FF69B4","#4169E1","#98FB98","#0000FF","#9932CC","#CD853F","#5F9EA0","#87CEEB","#48D1CC","#00008B","#FFB6C1","#800000","#00FF7F","#00CED1","#8A2BE2","#E9967A","#BDB76B","#8B0000","#A0522D","#ADFF2F","#FAEBD7","#FFE4C4","#FF4500","#7B68EE","#6495ED","#7FFF00","#8B008B","#191970","#4B0082","#8FBC8F","#20B2AA","#9ACD32","#FF00FF","#B0E0E6","#556B2F","#FFFFE0","#EEE8AA","#E6E6FA","#D2B48C","#B22222","#800080","#DB7093","#87CEFA","#DDA0DD","#B8860B","#FA8072","#6B8E23","#7FFFD4","#EE82EE","#FFA500","#778899","#9370DB","#D8BFD8","#FFF8DC","#000080","#008080","#FF0000","#40E0D0","#FFFF00","#E0FFFF","#F4A460","#DC143C","#FAFAD2","#FF1493","#A52A2A","#FFC0CB","#D2691E","#F5F5DC","#9400D3","#DA70D6","#2E8B57","#8B4513","#0000CD","#1E90FF","#FF7F50","#FFA07A","#00BFFF","#66CDAA","#808000","#FFEBCD","#00FFFF","#B0C4DE","#6A5ACD","#F08080","#90EE90","#4682B4","#FFFACD","#008000","#F5DEB3","#FF6347","#2F4F4F"]
 
-console.log(summaryCategorical(y,viewNum=5))
+var LineInventory=["solid", "dot", "dash", "longdash", "dashdot", "longdashdot","solid", "dot", "dash", "longdash", "dashdot", "longdashdot","solid", "dot", "dash", "longdash", "dashdot", "longdashdot","solid", "dot", "dash", "longdash", "dashdot", "longdashdot","solid", "dot", "dash", "longdash", "dashdot", "longdashdot","solid", "dot", "dash", "longdash", "dashdot", "longdashdot","solid", "dot", "dash", "longdash", "dashdot", "longdashdot","solid", "dot", "dash", "longdash", "dashdot", "longdashdot","solid", "dot", "dash", "longdash", "dashdot", "longdashdot","solid", "dot", "dash", "longdash", "dashdot", "longdashdot","solid", "dot", "dash", "longdash", "dashdot", "longdashdot"]        
+        
+//##############################################################################################################################   
+//###############################         Plotting Function                    #################################################      
+//##############################################################################################################################   
+//##############################################################################################################################       
+      
+        
+function CdfPlot(ContVar){
+    var trace = {
+    x: ContVar,
+    type: 'histogram',
+	cumulative: {enabled: true}
+  };
+    var data = [trace];
+	Plotly.newPlot('myDiv', data);
+};
+
+
+function PdfPlot(ContVar,Normalized=false){
+	var Normalized=Normalized
+	if (Normalized==false){
+		var trace = {
+        	x: ContVar,
+        	type: 'histogram',
+  		};
+   		var data = [trace];
+	}
+	if (Normalized==true){
+		var data = [
+  			{
+    				x: ContVar,
+    				type: 'histogram',
+				histnorm: 'probability',
+				marker: {
+        				color: 'rgb(255,255,100)',
+    				},
+ 			 }
+		];
+	}
+	
+	Plotly.newPlot('myDiv', data);
+};
+
+
+
+//console.log(summaryCategorical(y,viewNum=5))
 
 
 
@@ -236,28 +322,10 @@ function PiePlot(CatVar,viewNum=100,DivPos='myDiv'){
 	Plotly.newPlot(DivPos,data);
 }
 
-var catvar = {
-    'Value': ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'],
-    'Type': 'categorical'
-	};
-
-var contvar = {
-    'Value': [1,2,3,4,5,6,7,8,9,13,11],
-    'Type': 'continuous'
-	};  
-        
-var contvar2 = {
-    'Value': [2,3,3,4,5,6,7,8,9,13,11],
-    'Type': 'continuous'
-	};   
-        
-var groupvar = {
-    'Value': ['A','A','B','B','B','B','C','C','C','A','D'],
-    'Type': 'continuous'
-	};         
-        
-//y = ['sd','sd','sd','a','f','sd','ww','a','f','w','ewe'];
+   
 function ScatterOrLineOrBarPlot(Var1,Var2,Line=true,Bar=false,Size=14,Opacity=1,Switch=false,ShowAllXTick=true,DivPos='myDiv'){
+    var Xaxis=Var1.Name
+    var Yaxis=Var2.Name
     var ShowAllXTick=ShowAllXTick;
     if(Line){var plotmode = 'lines+markers'}else{var plotmode = 'markers'}
 	var trace1 = {
@@ -298,12 +366,14 @@ function ScatterOrLineOrBarPlot(Var1,Var2,Line=true,Bar=false,Size=14,Opacity=1,
 		};};
 	if(Var1.Type!='categorical'&&Var2.Type!='categorical'){
 		if(Switch==true){
+            Xaxis=Var2.Name;
+            Yaxis=Var1.Name;
 			var trace1 = {
   			x: Var2.Value,
   			y: Var1.Value,
             mode: plotmode,
             marker: { size: Size,
-                      opacity: Opacity },
+                      opacity: Opacity},
             line: {dash: 'solid',
                    opacity: Opacity,
                    width: Size/3
@@ -322,23 +392,29 @@ function ScatterOrLineOrBarPlot(Var1,Var2,Line=true,Bar=false,Size=14,Opacity=1,
 }
 //console.log(contvar.Type)
 
-function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3,Line=true,Bar=false,Size=14,Opacity=1,Switch=false,ShowAllXTick=true,viewNum=10,DivPos='myDiv'){
-    if(Line){var plotmode = 'Lines+markers'}else{var plotmode = 'markers'}
+function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3,Line=true,Bar=false,Size=14,Opacity=1,Switch=false,ShowAllXTick=true,Jitter=0.3,viewNum=10,DivPos='myDiv'){
+    if(Line){var plotmode = 'lines+markers'}else{var plotmode = 'markers'}
+    var JitterSize=Jitter;
     var LegendVar=summaryCategorical(Var3.Value,viewNum);
     var UniqueLabel=LegendVar['UniqueLabel'];
     var TotalUniqueLabel=LegendVar['Level'];
     var data=[];
+    var Xaxis=Var1.Name
+    var Yaxis=Var2.Name
+    
     for (let i = 0; i < UniqueLabel.length; i++) {
         var trace={x:[],
              y:[],
              mode:plotmode,
              name:UniqueLabel[i],
+             jitter: JitterSize,
              marker: {  size:Size,
                         opacity: Opacity},
              line: {dash: 'solid',
                     opacity: Opacity,
                     width: Size/3
-            }};
+             }       
+                  };
         var position=Var3.Value.allIndexOf(UniqueLabel[i]);
         var xTemp=[];
         var yTemp=[];
@@ -346,48 +422,217 @@ function ScatterOrLineOrBarPlotForThree(Var1,Var2,Var3,Line=true,Bar=false,Size=
             xTemp.push(Var1.Value[element]);
             yTemp.push(Var2.Value[element]);
         });
-        trace.x=xTemp;
-        trace.y=yTemp;
-        
+        if(Switch==true){
+            trace.x=yTemp;
+            trace.y=xTemp;
+            Xaxis=Var2.Name;
+            Yaxis=Var1.Name;
+            trace.jitter=JitterSize;
+        }else{
+            trace.x=xTemp;
+            trace.y=yTemp;
+            trace.jitter=JitterSize;
+        };
+        if (Bar){trace.type='bar'};
         data.push(trace);
     };
+    
     var layout = {
         xaxis: {
-            autotick: !ShowAllXTick
+            autotick: !ShowAllXTick,
+            title: Xaxis 
+        },
+        yaxis: {
+            title: Yaxis
         }
     };
     
 	Plotly.newPlot(DivPos,data,layout);
 }        
   
+         
+function ScatterOrLineOrBarPlotForFour(Var1,Var2,Var3,Var4,Line=true,Bar=false,Size=14,Opacity=1,Switch=false,ShowAllXTick=true,Jitter=0.3,viewNum=10,DivPos='myDiv'){
+    if(Line){var plotmode = 'lines+markers'}else{var plotmode = 'markers'}
+    var JitterSize=Jitter;
+    var LegendVar1=summaryCategorical(Var3.Value,viewNum);
+    var UniqueLabel1=LegendVar1['UniqueLabel'];
+    var LegendVar2=summaryCategorical(Var4.Value,viewNum);
+    var UniqueLabel2=LegendVar2['UniqueLabel'];
+    var UniqueLabel=Combination(UniqueLabel1, UniqueLabel2);
+    var Var5=[];
+    var ID=Array.from(Array(Var1.Value.length).keys());
+    ID.forEach(function(element) {
+        Var5.push((Var3.Value[element])+':'+ (Var4.Value[element]));           
+    });
         
-        
- var LegendVar=summaryCategorical(catvar.Value,viewNum=7);
-    var UniqueLabel=LegendVar['UniqueLabel'];
-    var TotalUniqueLabel=LegendVar['Level'];        
-var data=[];
+    var data=[];
+    var Xaxis=Var1.Name
+    var Yaxis=Var2.Name
+    
     for (let i = 0; i < UniqueLabel.length; i++) {
         var trace={x:[],
-             y:[]};
-        var position=catvar.Value.allIndexOf(UniqueLabel[i]);
+             y:[],
+             mode:plotmode,
+             name:UniqueLabel[i],
+             jitter: JitterSize,
+             marker: {  size:Size,
+                        opacity: Opacity
+                        },
+             line: {dash: 'solid',
+                    opacity: Opacity,
+                    width: Size/3
+             }       
+                  };
+        
+        var position=Var5.allIndexOf(UniqueLabel[i]);
+        var position_color=UniqueLabel1.allIndexOf(UniqueLabel[i].split(":")[0]);
+        var position_shape=UniqueLabel2.allIndexOf(UniqueLabel[i].split(":")[1]);
         var xTemp=[];
         var yTemp=[];
         position.forEach(function(element) {
-            xTemp.push(contvar2.Value[element]);
-            yTemp.push(contvar.Value[element]);
+            xTemp.push(Var1.Value[element]);
+            yTemp.push(Var2.Value[element]);
         });
-        trace.x=xTemp;
-        trace.y=yTemp;
-        
+        if(Switch==true){
+            trace.x=yTemp;
+            trace.y=xTemp;
+            Xaxis=Var2.Name;
+            Yaxis=Var1.Name;
+            trace.jitter=JitterSize;
+        }else{
+            trace.x=xTemp;
+            trace.y=yTemp;
+            trace.jitter=JitterSize;
+        };
+        if (Bar){trace.type='bar'};
+        trace.marker.color=ColorRef[position_color];
+        trace.marker.symbol=ShapeInventory[position_shape];
+        if(Line){trace.line.color=ColorRef[position_color];
+                trace.line.dash=LineInventory[position_shape]}
         data.push(trace);
+    };
+    
+    var layout = {
+        xaxis: {
+            autotick: !ShowAllXTick,
+            title: Xaxis 
+        },
+        yaxis: {
+            title: Yaxis
+        }
+    };
+    
+	Plotly.newPlot(DivPos,data,layout);
+}        
+        
+function PiePlotForThree(Var1,Var2,Var3,Size=14,Opacity=1,Switch=false,ShowAllXTick=true,Jitter=0.3,viewNum=10,DivPos='myDiv'){
+    var LegendVar=summaryCategorical(Var2.Value,viewNum);
+    var UniqueLabel=LegendVar['UniqueLabel'];
+    var TotalUniqueLabel=LegendVar['Level'];
+    var data=[];
+    var layout={};
+    var FractionInventory=[2-UniqueLabel.length,4-UniqueLabel.length,9-UniqueLabel.length,16-UniqueLabel.length,25-UniqueLabel.length];
+    var FractionInventoryAbs=FractionInventory.map(function(t){ return Math.abs(t); });
+    var FractionPosition=indexOfSmallest(FractionInventoryAbs);
+    var FractionProportion=1/(FractionPosition+1);
+    var Layout=[];
+    
+    var x_center=[];
+    var y_center=[];  
+    var x_lo=[];
+    var x_up=[];
+    var y_lo=[];
+    var y_up=[];
+    
+     if (FractionPosition==0){
+        var x_center=[0.22,0.78];
+        var y_center=[0.24,0.24];
+        var x_lo=[0.01,0.52];
+        var x_up=[0.8,1];
+        var y_lo=[0.01,0.01];
+        var y_up=[0.48,0.48];        
+    }else if(FractionPosition==1){
+        var x_center=[0.25,0.75,0.25,0.75];
+        var y_center=[0.25,0.25,0.75,0.75];
+        var x_lo=[0.005,0.505,0.005,0.505];
+        var x_up=[0.5,1,0.5,1];
+        var y_lo=[0.005,0.005,0.505,0.505];
+        var y_up=[0.5,0.5,1,1];
+    }else if(FractionPosition==2){
+        var x_center=[0.124,0.507,0.881,0.124,0.507,0.841,0.124,0.507,0.881];
+        var y_center=[0.174,0.174,0.174,0.507,0.507,0.507,0.841,0.841,0.841];
+        var x_lo=[0,0.34,0.67,0,0.34,0.67,0,0.34,0.67];
+        var x_up=[0.34,0.68,1,0.34,0.68,1,0.34,0.68,1];
+        var y_lo=[0,0,0,0.34,0.34,0.34,0.67,0.67,0.67];
+        var y_up=[0.34,0.34,0.34,0.68,0.68,0.68,1,1,1];
+    }else if(FractionPosition==3){
+        var x_center=[0.039,0.319,0.569,0.869,0.039,0.319,0.569,0.869,0.039,0.319,0.569,0.869,0.039,0.319,0.569,0.869];
+        var y_center=[0.069,0.069,0.069,0.069,0.319,0.319,0.319,0.319,0.569,0.569,0.569,0.569,0.819,0.819,0.819,0.819];
+        var x_lo=[0.005,0.255,0.505,0.755,0.005,0.255,0.505,0.755,0.005,0.255,0.505,0.755,0.005,0.255,0.505,0.755];
+        var x_up=[0.133,0.383,0.633,0.883,0.133,0.383,0.633,0.883,0.133,0.383,0.633,0.883,0.133,0.383,0.633,0.883];
+        var y_lo=[0.005,0.005,0.005,0.005,0.255,0.255,0.255,0.255,0.505,0.505,0.505,0.505,0.755,0.755,0.755,0.755];
+        var y_up=[0.133,0.133,0.133,0.133,0.383,0.383,0.383,0.383,0.633,0.633,0.633,0.633,0.883,0.883,0.883,0.883];
+    }else if(FractionPosition==4){
+        var x_center=[0.026,0.246,0.446,0.646,0.886,0.026,0.246,0.446,0.646,0.886,0.026,0.246,0.446,0.646,0.886,0.026,0.246,0.446,0.646,0.886,0.026,0.246,0.446,0.646,0.886];
+        var y_center=[0.046,0.046,0.046,0.046,0.046,0.246,0.246,0.246,0.246,0.246,0.446,0.446,0.446,0.446,0.446,0.646,0.646,0.646,0.646,0.646,0.846,0.846,0.846,0.846,0.846];
+        var x_lo=[0.005,0.205,0.405,0.605,0.805,0.005,0.205,0.405,0.605,0.805,0.005,0.205,0.405,0.605,0.805,0.005,0.205,0.405,0.605,0.805,0.005,0.205,0.405,0.605,0.805];
+        var x_up=[0.087,0.287,0.487,0.687,0.887,0.087,0.287,0.487,0.687,0.887,0.087,0.287,0.487,0.687,0.887,0.087,0.287,0.487,0.687,0.887,0.087,0.287,0.487,0.687,0.887];
+        var y_lo=[0.005,0.005,0.005,0.005,0.005,0.205,0.205,0.205,0.205,0.205,0.405,0.405,0.405,0.405,0.405,0.605,0.605,0.605,0.605,0.605,0.805,0.805,0.805,0.805,0.805];
+        var y_up=[0.087,0.087,0.087,0.087,0.087,0.287,0.287,0.287,0.287,0.287,0.487,0.487,0.487,0.487,0.487,0.687,0.687,0.687,0.687,0.687,0.887,0.887,0.887,0.887,0.887];        
     }
-       console.log(data) 
-   //ScatterOrLineOrBarPlotForThree(catvar,contvar2,groupvar,Line=true,Bar=true,Size=15,Opacity=1,Switch=true,ShowAllXTick=true) 
-      //ScatterOrLineOrBarPlot(contvar2,contvar,Line=false,Bar=true,Size=10,Opacity=10,Switch=true,ShowAllXTick=true) 
-
-CdfPlot([2,3,4,2,13,2,4,5,7,8,9,23,25,34,36,22,33,1,2,15,23,53,63])
-PdfPlot([2,3,4,2,13,2,4,5,7,8,9,23,25,34,36,22,33,1,2,15,23,53,63],Normalized=true)
-ScatterOrLineOrBarPlot(contvar2,contvar,line=false,bar=false,Switch=true,ShowAllXTick=true)
+    
+    for (let i = 0; i < UniqueLabel.length; i++) {
+        var trace={values:[],
+             labels:[],
+             name:UniqueLabel[i],
+             hoverinfo: 'label+percent+name',
+             hole: .6,
+             type: 'pie',
+             domain:{
+                  x: [x_lo[i],x_up[i]],
+                  y: [y_lo[i],y_up[i]]
+             }
+                   
+             };
+        var trace_layout={showarrow: false,
+             text:UniqueLabel[i],
+             x:x_center[i],
+             y:y_center[i]
+             };
+        
+        var position=Var2.Value.allIndexOf(UniqueLabel[i]);
+        var xTemp=[];
+        var yTemp=[];
+        position.forEach(function(element) {
+            xTemp.push(Var1.Value[element]);
+            yTemp.push(Var3.Value[element]);
+        });
+        
+            trace.values=xTemp;
+            trace.labels=yTemp;
+            
+        data.push(trace);
+        Layout.push(trace_layout);
+    };
+    
+    layout['annotations']=Layout
+    //layout['height']=900
+    //layout['height']=900
+	Plotly.newPlot(DivPos,data,layout);
+}               
+        
+//##############################################################################################################################   
+//###############################         Sample Applications                  #################################################      
+//##############################################################################################################################   
+//##############################################################################################################################          
+        
+        
+//ScatterOrLineOrBarPlotForThree(catvar,contvar2,groupvar,Line=false,Bar=false,Size=5,Opacity=0.5,Switch=false,ShowAllXTick=true,Jitter=0.9) 
+//ScatterOrLineOrBarPlot(contvar2,contvar,Line=false,Bar=true,Size=10,Opacity=10,Switch=true,ShowAllXTick=true) //ScatterOrLineOrBarPlotForFour(contvar,contvar2,catvar,groupvar,Line=true,Bar=false,Size=5,Opacity=0.5,Switch=false,ShowAllXTick=true,Jitter=0.9) 
+//PiePlotForThree(testCont,testCat1,testCat2,Opacity=0.5)      
+//CdfPlot([2,3,4,2,13,2,4,5,7,8,9,23,25,34,36,22,33,1,2,15,23,53,63])
+//PdfPlot([2,3,4,2,13,2,4,5,7,8,9,23,25,34,36,22,33,1,2,15,23,53,63],Normalized=true)
+//ScatterOrLineOrBarPlot(catvar,contvar,line=true,bar=false,Switch=false,ShowAllXTick=false)
 //PiePlot(y)
 //BarPlot(y,Frequency=true) 
 </script>
