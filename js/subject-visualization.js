@@ -8,7 +8,7 @@ var mainClassDataIsDisplayed = true;
 var plotlyBarChart = document.getElementById('plotly-bar-chart');
 var backButton = $('#back-button');
 
-// Get the nex character after a given character (for example, the next character in the alphabet).
+// Get the next character after a given character (for example, the next character in the alphabet).
 function getNextChar(char) {
   return String.fromCharCode(char.charCodeAt(0) + 1);
 }
