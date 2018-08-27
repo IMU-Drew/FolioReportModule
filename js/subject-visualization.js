@@ -166,7 +166,7 @@ var data = [
 var layout = {
   title: 'Number of Resources by Library of Congress Classification',
   xaxis: {
-    title: 'Main Class'
+    title: 'Classification'
   },
   yaxis: {
     title: 'Number of Resources'
