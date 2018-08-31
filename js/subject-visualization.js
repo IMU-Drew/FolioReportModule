@@ -1,12 +1,74 @@
 // Constants
-const MAX_NUM_RESOURCES_IN_SUBCLASS = 100;
+
+const LCC_MAIN_CLASSES = {
+  'A': 'General Works',
+  'B': 'Philosophy, Psychology, Religion',
+  'C': 'Auxiliary Sciences of History',
+  'D': 'World History and History of Europe, Asia, Africa, Australia, New Zealand, etc.',
+  'E': 'History of the Americas',
+  'F': 'History of the Americas',
+  'G': 'Geography, Anthropology, Recreation',
+  'H': 'Social Sciences',
+  'J': 'Political Science',
+  'K': 'Law',
+  'L': 'Education',
+  'M': 'Music and Books on Music',
+  'N': 'Fine Arts',
+  'P': 'Language and Literature',
+  'Q': 'Science',
+  'R': 'Medicine',
+  'S': 'Agriculture',
+  'T': 'Technology',
+  'U': 'Military Science',
+  'V': 'Naval Science',
+  'Z': 'Bibliography, Library Sciecne, Information Resources (General)'
+};
+
+// An enum-esque object used to describe the state of the chart.
+const chartLevels = {
+  mainClass: 0,
+  subclass: 1,
+  category: 2
+}
 
 // Variables
-var sampleData = new Object;
-var sampleMainClassDataArray = new Array;
-var mainClassDataIsDisplayed = true;
+
+var data = {
+  'mainClassData': new Array(),
+  'mainClassTitles': new Array(),
+  'mainClasses': new Object()
+};
+
+var lccSubclassDataRequest = new XMLHttpRequest();
 var plotlyBarChart = document.getElementById('plotly-bar-chart');
 var backButton = $('#back-button');
+var chartLevel = chartLevels.mainClass;
+var currentMainClass;
+
+// Library of Congress Classification main class Object prototype constructor
+function LccMainClass(description) {
+  this.description = description;
+  this.subclassData = new Array();
+  this.subclassTitles = new Array();
+  this.subclasses = new Object();
+}
+
+// Library of Congress Classification subclass Object prototype constructor
+function LccSubclass(description) {
+  this.description = description;
+  this.categoryData = new Array();
+  this.categoryTitles = new Array();
+  this.categories = new Object();
+  this.mainCategory = new String();
+}
+
+// Library of Congress Classification category Object prototype constructor
+function LccCategory(description, lowerBound, upperBound) {
+  this.description = description;
+  this.lowerBound = lowerBound;
+  this.upperBound = upperBound;
+  this.numResources = 0;
+}
 
 // Get the next character after a given character (for example, the next character in the alphabet).
 function getNextChar(char) {
@@ -33,160 +95,356 @@ function max(array) {
   }
 }
 
-// Animates the displaying of the appropriate subclass data.
-function animateSubclassData(mainClass) {
-  var subclassDataArray = new Array;
-
-  // Start with only the subclass of each class name.
-  var fullClassNames = Object.keys(sampleData[mainClass]);
-
-  // Prepend the main class letter to each subclass.
-  for (var index in fullClassNames) {
-    fullClassNames[index] = mainClass + fullClassNames[index];
-  }
-
-  // Counter
-  var i = 0;
-
-  // Get the subclass data into an array to give to Plotly.
-  for (var subclass in sampleData[mainClass]) {
-    subclassDataArray[i] = sampleData[mainClass][subclass];
-
-    // Increment the counter.
-    ++i;
-  }
-
-  // Create the data array to pass to Plotly.
-  var data = [
-    {
-      x: fullClassNames,
-      y: subclassDataArray,
-      type: 'bar'
-    }
-  ];
-
-  // Create the layout object to pass to plotly.
-  var layout = {
-    title: 'Number of Resources by Library of Congress Classification',
-    xaxis: {
-      title: 'Classification'
-    },
-    yaxis: {
-      title: 'Number of Resources',
-      range: [0, MAX_NUM_RESOURCES_IN_SUBCLASS]
-    }
-  };
-
-  // Animate the chart.
-  Plotly.animate('plotly-bar-chart', {
-    data: data,
-    layout: layout
-  });
-
-  mainClassDataIsDisplayed = false;
-
-  // Display the back button.
-  backButton.removeClass('no-show');
-}
-
 // Animates the re-displaying of the main class data.
 function animateMainClassData() {
-  // FIXME: Remove after testing.
-  console.log('Animating main class data...');
-
-  // Create the main class data array to pass to Plotly.
-  var data = [
+  // Create the data array to pass to Plotly.
+  const plotlyMainClassData = [
     {
-      x: Object.keys(sampleData),
-      y: sampleMainClassDataArray,
+      x: data.mainClassTitles,
+      y: data.mainClassData,
       type: 'bar'
     }
   ];
 
   // Create the layout object to pass to Plotly.
-  var layout = {
+  const plotlyMainClassLayout = {
     title: 'Number of Resources by Library of Congress Classification',
     xaxis: {
       title: 'Classification'
     },
     yaxis: {
       title: 'Number of Resources',
-      range: [0, max(sampleMainClassDataArray)]
+      range: [0, max(data.mainClassData)]
     }
   };
 
   // Animate the chart.
   Plotly.animate('plotly-bar-chart', {
-    data: data,
-    layout: layout
+    data: plotlyMainClassData,
+    layout: plotlyMainClassLayout
   });
 
-  mainClassDataIsDisplayed = true;
+  // Update the state of the chart.
+  chartLevel = chartLevels.mainClass;
+  currentMainClass = '';
 
   // Un-display the back button.
   backButton.addClass('no-show');
 }
 
-// Generate sample data.
-for (var char1 = 'A'; char1.charAt(0) <= 'Z'; char1 = getNextChar(char1)) {
-  sampleData[char1] = new Object;
+// Animates the displaying of the appropriate subclass data.
+function animateSubclassData(mainClass) {
+  // Create the data array to pass to Plotly.
+  const plotlySubclassData = [
+    {
+      x: data.mainClasses[mainClass].subclassTitles,
+      y: data.mainClasses[mainClass].subclassData,
+      type: 'bar'
+    }
+  ];
 
-  for (var char2 = 'A'; char2.charAt(0) <= 'Z'; char2 = getNextChar(char2)) {
-    sampleData[char1][char2] = Math.floor(Math.random() * (MAX_NUM_RESOURCES_IN_SUBCLASS + 1));
-  }
+  // Create the layout object to pass to plotly.
+  const plotlySubclassLayout = {
+    title: 'Number of Resources by Library of Congress Classification',
+    xaxis: {
+      title: 'Classification'
+    },
+    yaxis: {
+      title: 'Number of Resources',
+      range: [0, max(data.mainClasses[mainClass].subclassData)]
+    }
+  };
+
+  // Animate the chart.
+  Plotly.animate('plotly-bar-chart', {
+    data: plotlySubclassData,
+    layout: plotlySubclassLayout
+  });
+
+  // Update the state of the chart.
+  chartLevel = chartLevels.subclass;
+  currentMainClass = mainClass;
+
+  // Display the back button if it is not already visible.
+  backButton.removeClass('no-show');
 }
 
-// Counter
-var i = 0;
+// Animates the displaying of the appropriate category data.
+function animateCategoryData(subclass) {
+  // Create the data array to pass to Plotly.
+  const plotlyCategoryData = [
+    {
+      x: data.mainClasses[subclass[0]].subclasses[subclass].categoryTitles,
+      y: data.mainClasses[subclass[0]].subclasses[subclass].categoryData,
+      type: 'bar'
+    }
+  ];
 
-// Get the main class data into an array to give to Plotly.
-for (var mainClass in sampleData) {
-  // Start at zero.
-  sampleMainClassDataArray[i] = 0;
+  // Create the layout object to pass to plotly.
+  const plotlyCategoryLayout = {
+    title: 'Number of Resources by Library of Congress Classification',
+    xaxis: {
+      title: 'Classification'
+    },
+    yaxis: {
+      title: 'Number of Resources',
+      range: [0, max(data.mainClasses[subclass[0]].subclasses[subclass].categoryData)]
+    }
+  };
 
-  // Sum the subclass values.
-  for (subclass in sampleData[mainClass]) {
-    sampleMainClassDataArray[i] += sampleData[mainClass][subclass];
-  }
+  // Animate the chart.
+  Plotly.animate('plotly-bar-chart', {
+    data: plotlyCategoryData,
+    layout: plotlyCategoryLayout
+  });
 
-  // Increment the counter.
-  ++i;
+  // Update the state of the chart.
+  chartLevel = chartLevels.category;
 }
 
-// Create the main class data array to pass to Plotly.
-var data = [
-  {
-    x: Object.keys(sampleData),
-    y: sampleMainClassDataArray,
-    type: 'bar'
-  }
-];
-
-// Create the layout object to pass to Plotly.
-var layout = {
-  title: 'Number of Resources by Library of Congress Classification',
-  xaxis: {
-    title: 'Classification'
-  },
-  yaxis: {
-    title: 'Number of Resources'
-  }
+// Initialize the data Object.
+for (var mainClass in LCC_MAIN_CLASSES) {
+  data.mainClasses[mainClass] = new LccMainClass(LCC_MAIN_CLASSES[mainClass]);
 }
 
-// Draw the chart.
-Plotly.newPlot('plotly-bar-chart', data, layout);
+lccSubclassDataRequest.addEventListener('load', function(event) {
+  // Convert the returned JSON data to a JavaScript object.
+  const lccSubclassData = JSON.parse(lccSubclassDataRequest.responseText);
 
-// Display the appropriate subclass data when a bar is clicked.
-plotlyBarChart.on('plotly_click', function(data) {
-  // If the main class data is currently being displayed...
-  if (mainClassDataIsDisplayed === true) {
-    // Get the value of the main class corresponding to the bar that was clicked.
-    var mainClass = data.points[0].x;
+  // Incorporate the subclass data into the main data object.
+  for (var subclass in lccSubclassData) {
+    // Variables
+    var mainClass = new String();
 
-    // Animate the displaying of the appropriate subclass data.
-    animateSubclassData(mainClass);
+    // Get the main class that the subclass falls under.
+    mainClass = subclass.charAt(0);
+
+    // Create the new LccSubclass Object.
+    data.mainClasses[mainClass].subclasses[subclass] = new LccSubclass('');
+
+    // Find the subclass's "main" category, and use it to get the description of the subclass.
+    // Loop through the subclass's categories.
+    for (var i = 0; i < lccSubclassData[subclass].length; ++i) {
+      // If the category is the "main" category...
+      if (lccSubclassData[subclass][i].parents.length === 0) {
+        // Record the name of the "main" category, and use its description for the subclass.
+        data.mainClasses[mainClass].subclasses[subclass].mainCategory = lccSubclassData[subclass][i].id;
+        data.mainClasses[mainClass].subclasses[subclass].description = lccSubclassData[subclass][i].subject;
+
+        // End the loop, since the "main" category has been found.
+        break;
+      }
+    }
+
+    // Populate the subclass's categories Object.
+    // Loop through the subclasses categories again.
+    for (var i = 0; i < lccSubclassData[subclass].length; ++i) {
+      // If the category is a first-level category...
+      if (lccSubclassData[subclass][i].parents[0] === data.mainClasses[mainClass].subclasses[subclass].mainCategory) {
+        // Create a new sub-Object in the subclass's categories Object to represent it.
+        data.mainClasses[mainClass].subclasses[subclass].categories[lccSubclassData[subclass][i].id] = new LccCategory(lccSubclassData[subclass][i].subject, lccSubclassData[subclass][i].start, lccSubclassData[subclass][i].stop);
+      }
+    }
   }
 });
 
+lccSubclassDataRequest.open('GET', 'https://raw.githubusercontent.com/thisismattmiller/lcc-pdf-to-json/master/results.json', true);
+lccSubclassDataRequest.send();
+
+// Load and process the data file using D3.
+d3.csv('https://alabama.box.com/shared/static/tw0rze209fk99s06dhqa4h19toirotjo.csv').then(function(resourceData) {
+  // Loop through the data array.
+  // for (var i = 0; i < resourceData.length; ++i) {
+  for (var i = 0; i < resourceData.length; ++i) {
+    // FIXME: Get extract the main class and subclass from the call number.
+    // var mainClass = resourceData[i].LC;
+    // var subclass = resourceData[i].LC_Sub;
+    // var classNumber = extractClassNumberFrom(resourceData[i].Call_Number);
+
+    // Variables
+    var callNumber = resourceData[i].DISPLAY_CALL_NO;
+    var mainClass;
+    var subclass;
+    var classNumber = '';
+
+    // Extract the main class, subclass (if there is one), and class number.
+    if (callNumber.length > 0) {
+      // Get the main class, and start the subclass with the letter denoting the main class.
+      mainClass = callNumber[0];
+      subclass = mainClass;
+
+      // Start with the second character.
+      var j = 1;
+
+      // Extract the subclass from the call number.
+      // Note that if the call number does not contain a subclass, then the subclass variable will just contain the ;etter for the main class.
+      // Loop through each character of the call number.
+      while (j < callNumber.length) {
+        // If the character is an uppercase letter...
+        if ((callNumber[j] >= 'A') && (callNumber[j] <= 'Z')) {
+          // Add it to the subclass.
+          subclass += callNumber[j];
+        }
+        // Else, if the character is not an uppercase letter...
+        else {
+          // End the loop.
+          break;
+        }
+
+        // Get the next character.
+        ++j;
+      }
+
+      // Extract the class number from the call number.
+      // Continue looping through each character in the call number.
+      while (j < callNumber.length) {
+        // If the character is a digit...
+        if ((callNumber[j] >= '0') && (callNumber[j] <= '9')) {
+          // Add it to the class number.
+          classNumber += callNumber[j];
+        }
+        // Else, if the character is not a digit...
+        else {
+          // Convert the class number string into a Number object, and end the loop.
+          classNumber = Number(classNumber);
+          break;
+        }
+
+        // Get the next character.
+        ++j;
+      }
+    }
+
+    // Find the category that the resource belongs in.
+    // If both the main class and the subclass are valid...
+    if ((data.mainClasses.hasOwnProperty(mainClass)) && (data.mainClasses[mainClass].subclasses.hasOwnProperty(subclass))) {
+      // Loop through the appropriate categories.
+      for (var category in data.mainClasses[mainClass].subclasses[subclass].categories) {
+        // Get the lower and upper bounds for the current category.
+        var lowerBound = data.mainClasses[mainClass].subclasses[subclass].categories[category].lowerBound;
+        var upperBound = data.mainClasses[mainClass].subclasses[subclass].categories[category].upperBound;
+
+        // If the resource's class number falls within the bounds of the curent category...
+        if ((classNumber >= lowerBound) && (classNumber <= upperBound)) {
+          // Increment the category's resource counter.
+          ++data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources;
+        }
+      }
+    }
+  }
+
+  // Recursively construct the data and title arrays.
+  // Loop through each main class in the data object.
+  for (var mainClass in data.mainClasses) {
+    // Variables
+    var numResourcesInMainClass = 0;
+
+    // Construct the subclass data and titles arrays for the current main class.
+    // Loop through each subclass in the current main class.
+    for (var subclass in data.mainClasses[mainClass].subclasses) {
+      // Variables
+      var numResourcesInSubclass = 0;
+
+      // Construct the category data and titles arrays for the current subclass.
+      // Loop through each category in the current subclass.
+      for (var category in data.mainClasses[mainClass].subclasses[subclass].categories) {
+        // Push the number of resources in the current category to the data array of its subclass.
+        data.mainClasses[mainClass].subclasses[subclass].categoryData.push(data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources);
+
+        // Add the number of resources in the current category to the number of resources in the subclass.
+        numResourcesInSubclass += data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources;
+
+        // Push the title of the current category to the title array of its subclass.
+        data.mainClasses[mainClass].subclasses[subclass].categoryTitles.push(data.mainClasses[mainClass].subclasses[subclass].categories[category].description);
+      }
+
+      // Push the number of resources in the current subclass to the data array of its main class.
+      data.mainClasses[mainClass].subclassData.push(numResourcesInSubclass);
+
+      // Add the number of resources in the current subclass to the number of resources in the main class.
+      numResourcesInMainClass += numResourcesInSubclass;
+
+      // Push the title of the current subclass to the title array of its main class.
+      data.mainClasses[mainClass].subclassTitles.push(subclass + ': ' + data.mainClasses[mainClass].subclasses[subclass].description);
+    }
+
+    // Push the number of resources in the current main class to the main class data array.
+    data.mainClassData.push(numResourcesInMainClass);
+
+    // Push the title of the current main class to the main class titles array.
+    data.mainClassTitles.push(mainClass + ': ' + data.mainClasses[mainClass].description);
+  }
+
+  // Create the main class data array to be passed to Plotly.
+  const plotlyMainClassData = [
+    {
+      x: data.mainClassTitles,
+      y: data.mainClassData,
+      type: 'bar'
+    }
+  ];
+
+  // Create the main class layout object to pass to Plotly.
+  const plotlyMainClasslayout = {
+    title: 'Number of Resources by Library of Congress Classification',
+    xaxis: {
+      title: 'Classification',
+      tickangle: -60
+    },
+    yaxis: {
+      title: 'Number of Resources'
+    },
+    height: 1000,
+    margin: {
+      b: 500
+    }
+  }
+
+  // Draw the chart.
+  Plotly.newPlot('plotly-bar-chart', plotlyMainClassData, plotlyMainClasslayout);
+
+  // Add an event listener to the chart that displays the appropriate subclass or category data when a bar is clicked.
+  plotlyBarChart.on('plotly_click', function(eventData) {
+    // If the main class data is currently being displayed...
+    if (chartLevel === chartLevels.mainClass) {
+      // Get the value of the main class corresponding to the bar that was clicked.
+      var mainClass = eventData.points[0].x[0];
+
+      // Display the appropriate subclass data.
+      animateSubclassData(mainClass);
+    }
+    // Else, if subclass data is currently being displayed...
+    else if (chartLevel === chartLevels.subclass) {
+      // Get the value of the subclass corresponding to the bar that was clicked.
+
+      var i = 0;
+      var subclass = '';
+
+      // Loop through each charter in the title of the bar that was clicked until a non-uppercase or non-alphabetic character is found.
+      while ((i < eventData.points[0].x.length) && (eventData.points[0].x[i] >= 'A') && (eventData.points[0].x[i] <= 'Z')) {
+        // Add the character to the subclass string.
+        subclass += eventData.points[0].x[i];
+
+        // Get the next character.
+        ++i;
+      }
+
+      // Display the appropriate category data.
+      animateCategoryData(subclass);
+    }
+  });
+});
+
 // Re-display the main class data when the back button is pressed.
-backButton.on('click', animateMainClassData);
+backButton.on('click', function() {
+  // If subclass data is currently being displayed...
+  if (chartLevel === chartLevels.subclass) {
+    // Display the main class data.
+    animateMainClassData();
+  }
+  // If category data is currently being displayed...
+  else if (chartLevel === chartLevels.category) {
+    // Display the appropriate subclass data.
+    animateSubclassData(currentMainClass);
+  }
+});
