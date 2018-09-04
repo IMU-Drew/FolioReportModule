@@ -249,13 +249,13 @@ lccSubclassDataRequest.addEventListener('load', function(event) {
 
   // Add an "Other" subclass to each main class and an "Other" category to each subclass.
   for (var mainClass in data.mainClasses) {
+    // Add an "Other" subclass.
+    data.mainClasses[mainClass].subclasses['Other'] = new LccSubclass('');
+    
     // Add an "Other" category to each subclass.
     for (var subclass in data.mainClasses[mainClass].subclasses) {
       data.mainClasses[mainClass].subclasses[subclass].categories['Other'] = new LccCategory('');
     }
-
-    // Add an "Other" subclass.
-    data.mainClasses[mainClass].subclasses['Other'] = new LccSubclass('');
   }
 
   // Load and process the data file using D3.
