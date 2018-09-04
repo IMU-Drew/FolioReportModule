@@ -246,194 +246,194 @@ lccSubclassDataRequest.addEventListener('load', function(event) {
       }
     }
   }
+
+  // Load and process the data file using D3.
+  d3.csv('https://alabama.box.com/shared/static/tw0rze209fk99s06dhqa4h19toirotjo.csv').then(function(resourceData) {
+    // Loop through the data array.
+    // for (var i = 0; i < resourceData.length; ++i) {
+    for (var i = 0; i < resourceData.length; ++i) {
+      // FIXME: Get extract the main class and subclass from the call number.
+      // var mainClass = resourceData[i].LC;
+      // var subclass = resourceData[i].LC_Sub;
+      // var classNumber = extractClassNumberFrom(resourceData[i].Call_Number);
+
+      // Variables
+      var callNumber = resourceData[i].DISPLAY_CALL_NO;
+      var mainClass;
+      var subclass;
+      var classNumber = '';
+
+      // Extract the main class, subclass (if there is one), and class number.
+      if (callNumber.length > 0) {
+        // Get the main class, and start the subclass with the letter denoting the main class.
+        mainClass = callNumber[0];
+        subclass = mainClass;
+
+        // Start with the second character.
+        var j = 1;
+
+        // Extract the subclass from the call number.
+        // Note that if the call number does not contain a subclass, then the subclass variable will just contain the ;etter for the main class.
+        // Loop through each character of the call number.
+        while (j < callNumber.length) {
+          // If the character is an uppercase letter...
+          if ((callNumber[j] >= 'A') && (callNumber[j] <= 'Z')) {
+            // Add it to the subclass.
+            subclass += callNumber[j];
+          }
+          // Else, if the character is not an uppercase letter...
+          else {
+            // End the loop.
+            break;
+          }
+
+          // Get the next character.
+          ++j;
+        }
+
+        // Extract the class number from the call number.
+        // Continue looping through each character in the call number.
+        while (j < callNumber.length) {
+          // If the character is a digit...
+          if ((callNumber[j] >= '0') && (callNumber[j] <= '9')) {
+            // Add it to the class number.
+            classNumber += callNumber[j];
+          }
+          // Else, if the character is not a digit...
+          else {
+            // Convert the class number string into a Number object, and end the loop.
+            classNumber = Number(classNumber);
+            break;
+          }
+
+          // Get the next character.
+          ++j;
+        }
+      }
+
+      // Find the category that the resource belongs in.
+      // If both the main class and the subclass are valid...
+      if ((data.mainClasses.hasOwnProperty(mainClass)) && (data.mainClasses[mainClass].subclasses.hasOwnProperty(subclass))) {
+        // Loop through the appropriate categories.
+        for (var category in data.mainClasses[mainClass].subclasses[subclass].categories) {
+          // Get the lower and upper bounds for the current category.
+          var lowerBound = data.mainClasses[mainClass].subclasses[subclass].categories[category].lowerBound;
+          var upperBound = data.mainClasses[mainClass].subclasses[subclass].categories[category].upperBound;
+
+          // If the resource's class number falls within the bounds of the curent category...
+          if ((classNumber >= lowerBound) && (classNumber <= upperBound)) {
+            // Increment the category's resource counter.
+            ++data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources;
+          }
+        }
+      }
+    }
+
+    // Recursively construct the data and title arrays.
+    // Loop through each main class in the data object.
+    for (var mainClass in data.mainClasses) {
+      // Variables
+      var numResourcesInMainClass = 0;
+
+      // Construct the subclass data and titles arrays for the current main class.
+      // Loop through each subclass in the current main class.
+      for (var subclass in data.mainClasses[mainClass].subclasses) {
+        // Variables
+        var numResourcesInSubclass = 0;
+
+        // Construct the category data and titles arrays for the current subclass.
+        // Loop through each category in the current subclass.
+        for (var category in data.mainClasses[mainClass].subclasses[subclass].categories) {
+          // Push the number of resources in the current category to the data array of its subclass.
+          data.mainClasses[mainClass].subclasses[subclass].categoryData.push(data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources);
+
+          // Add the number of resources in the current category to the number of resources in the subclass.
+          numResourcesInSubclass += data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources;
+
+          // Push the title of the current category to the title array of its subclass.
+          data.mainClasses[mainClass].subclasses[subclass].categoryTitles.push(data.mainClasses[mainClass].subclasses[subclass].categories[category].description);
+        }
+
+        // Push the number of resources in the current subclass to the data array of its main class.
+        data.mainClasses[mainClass].subclassData.push(numResourcesInSubclass);
+
+        // Add the number of resources in the current subclass to the number of resources in the main class.
+        numResourcesInMainClass += numResourcesInSubclass;
+
+        // Push the title of the current subclass to the title array of its main class.
+        data.mainClasses[mainClass].subclassTitles.push(subclass + ': ' + data.mainClasses[mainClass].subclasses[subclass].description);
+      }
+
+      // Push the number of resources in the current main class to the main class data array.
+      data.mainClassData.push(numResourcesInMainClass);
+
+      // Push the title of the current main class to the main class titles array.
+      data.mainClassTitles.push(mainClass + ': ' + data.mainClasses[mainClass].description);
+    }
+
+    // Create the main class data array to be passed to Plotly.
+    const plotlyMainClassData = [
+      {
+        x: data.mainClassTitles,
+        y: data.mainClassData,
+        type: 'bar'
+      }
+    ];
+
+    // Create the main class layout object to pass to Plotly.
+    const plotlyMainClasslayout = {
+      title: 'Number of Resources by Library of Congress Classification',
+      xaxis: {
+        title: 'Classification',
+        tickangle: -60
+      },
+      yaxis: {
+        title: 'Number of Resources'
+      },
+      height: 1000,
+      margin: {
+        b: 500
+      }
+    }
+
+    // Draw the chart.
+    Plotly.newPlot('plotly-bar-chart', plotlyMainClassData, plotlyMainClasslayout);
+
+    // Add an event listener to the chart that displays the appropriate subclass or category data when a bar is clicked.
+    plotlyBarChart.on('plotly_click', function(eventData) {
+      // If the main class data is currently being displayed...
+      if (chartLevel === chartLevels.mainClass) {
+        // Get the value of the main class corresponding to the bar that was clicked.
+        var mainClass = eventData.points[0].x[0];
+
+        // Display the appropriate subclass data.
+        animateSubclassData(mainClass);
+      }
+      // Else, if subclass data is currently being displayed...
+      else if (chartLevel === chartLevels.subclass) {
+        // Get the value of the subclass corresponding to the bar that was clicked.
+
+        var i = 0;
+        var subclass = '';
+
+        // Loop through each charter in the title of the bar that was clicked until a non-uppercase or non-alphabetic character is found.
+        while ((i < eventData.points[0].x.length) && (eventData.points[0].x[i] >= 'A') && (eventData.points[0].x[i] <= 'Z')) {
+          // Add the character to the subclass string.
+          subclass += eventData.points[0].x[i];
+
+          // Get the next character.
+          ++i;
+        }
+
+        // Display the appropriate category data.
+        animateCategoryData(subclass);
+      }
+    });
+  });
 });
 
 lccSubclassDataRequest.open('GET', 'https://raw.githubusercontent.com/thisismattmiller/lcc-pdf-to-json/master/results.json', true);
 lccSubclassDataRequest.send();
-
-// Load and process the data file using D3.
-d3.csv('https://alabama.box.com/shared/static/tw0rze209fk99s06dhqa4h19toirotjo.csv').then(function(resourceData) {
-  // Loop through the data array.
-  // for (var i = 0; i < resourceData.length; ++i) {
-  for (var i = 0; i < resourceData.length; ++i) {
-    // FIXME: Get extract the main class and subclass from the call number.
-    // var mainClass = resourceData[i].LC;
-    // var subclass = resourceData[i].LC_Sub;
-    // var classNumber = extractClassNumberFrom(resourceData[i].Call_Number);
-
-    // Variables
-    var callNumber = resourceData[i].DISPLAY_CALL_NO;
-    var mainClass;
-    var subclass;
-    var classNumber = '';
-
-    // Extract the main class, subclass (if there is one), and class number.
-    if (callNumber.length > 0) {
-      // Get the main class, and start the subclass with the letter denoting the main class.
-      mainClass = callNumber[0];
-      subclass = mainClass;
-
-      // Start with the second character.
-      var j = 1;
-
-      // Extract the subclass from the call number.
-      // Note that if the call number does not contain a subclass, then the subclass variable will just contain the ;etter for the main class.
-      // Loop through each character of the call number.
-      while (j < callNumber.length) {
-        // If the character is an uppercase letter...
-        if ((callNumber[j] >= 'A') && (callNumber[j] <= 'Z')) {
-          // Add it to the subclass.
-          subclass += callNumber[j];
-        }
-        // Else, if the character is not an uppercase letter...
-        else {
-          // End the loop.
-          break;
-        }
-
-        // Get the next character.
-        ++j;
-      }
-
-      // Extract the class number from the call number.
-      // Continue looping through each character in the call number.
-      while (j < callNumber.length) {
-        // If the character is a digit...
-        if ((callNumber[j] >= '0') && (callNumber[j] <= '9')) {
-          // Add it to the class number.
-          classNumber += callNumber[j];
-        }
-        // Else, if the character is not a digit...
-        else {
-          // Convert the class number string into a Number object, and end the loop.
-          classNumber = Number(classNumber);
-          break;
-        }
-
-        // Get the next character.
-        ++j;
-      }
-    }
-
-    // Find the category that the resource belongs in.
-    // If both the main class and the subclass are valid...
-    if ((data.mainClasses.hasOwnProperty(mainClass)) && (data.mainClasses[mainClass].subclasses.hasOwnProperty(subclass))) {
-      // Loop through the appropriate categories.
-      for (var category in data.mainClasses[mainClass].subclasses[subclass].categories) {
-        // Get the lower and upper bounds for the current category.
-        var lowerBound = data.mainClasses[mainClass].subclasses[subclass].categories[category].lowerBound;
-        var upperBound = data.mainClasses[mainClass].subclasses[subclass].categories[category].upperBound;
-
-        // If the resource's class number falls within the bounds of the curent category...
-        if ((classNumber >= lowerBound) && (classNumber <= upperBound)) {
-          // Increment the category's resource counter.
-          ++data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources;
-        }
-      }
-    }
-  }
-
-  // Recursively construct the data and title arrays.
-  // Loop through each main class in the data object.
-  for (var mainClass in data.mainClasses) {
-    // Variables
-    var numResourcesInMainClass = 0;
-
-    // Construct the subclass data and titles arrays for the current main class.
-    // Loop through each subclass in the current main class.
-    for (var subclass in data.mainClasses[mainClass].subclasses) {
-      // Variables
-      var numResourcesInSubclass = 0;
-
-      // Construct the category data and titles arrays for the current subclass.
-      // Loop through each category in the current subclass.
-      for (var category in data.mainClasses[mainClass].subclasses[subclass].categories) {
-        // Push the number of resources in the current category to the data array of its subclass.
-        data.mainClasses[mainClass].subclasses[subclass].categoryData.push(data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources);
-
-        // Add the number of resources in the current category to the number of resources in the subclass.
-        numResourcesInSubclass += data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources;
-
-        // Push the title of the current category to the title array of its subclass.
-        data.mainClasses[mainClass].subclasses[subclass].categoryTitles.push(data.mainClasses[mainClass].subclasses[subclass].categories[category].description);
-      }
-
-      // Push the number of resources in the current subclass to the data array of its main class.
-      data.mainClasses[mainClass].subclassData.push(numResourcesInSubclass);
-
-      // Add the number of resources in the current subclass to the number of resources in the main class.
-      numResourcesInMainClass += numResourcesInSubclass;
-
-      // Push the title of the current subclass to the title array of its main class.
-      data.mainClasses[mainClass].subclassTitles.push(subclass + ': ' + data.mainClasses[mainClass].subclasses[subclass].description);
-    }
-
-    // Push the number of resources in the current main class to the main class data array.
-    data.mainClassData.push(numResourcesInMainClass);
-
-    // Push the title of the current main class to the main class titles array.
-    data.mainClassTitles.push(mainClass + ': ' + data.mainClasses[mainClass].description);
-  }
-
-  // Create the main class data array to be passed to Plotly.
-  const plotlyMainClassData = [
-    {
-      x: data.mainClassTitles,
-      y: data.mainClassData,
-      type: 'bar'
-    }
-  ];
-
-  // Create the main class layout object to pass to Plotly.
-  const plotlyMainClasslayout = {
-    title: 'Number of Resources by Library of Congress Classification',
-    xaxis: {
-      title: 'Classification',
-      tickangle: -60
-    },
-    yaxis: {
-      title: 'Number of Resources'
-    },
-    height: 1000,
-    margin: {
-      b: 500
-    }
-  }
-
-  // Draw the chart.
-  Plotly.newPlot('plotly-bar-chart', plotlyMainClassData, plotlyMainClasslayout);
-
-  // Add an event listener to the chart that displays the appropriate subclass or category data when a bar is clicked.
-  plotlyBarChart.on('plotly_click', function(eventData) {
-    // If the main class data is currently being displayed...
-    if (chartLevel === chartLevels.mainClass) {
-      // Get the value of the main class corresponding to the bar that was clicked.
-      var mainClass = eventData.points[0].x[0];
-
-      // Display the appropriate subclass data.
-      animateSubclassData(mainClass);
-    }
-    // Else, if subclass data is currently being displayed...
-    else if (chartLevel === chartLevels.subclass) {
-      // Get the value of the subclass corresponding to the bar that was clicked.
-
-      var i = 0;
-      var subclass = '';
-
-      // Loop through each charter in the title of the bar that was clicked until a non-uppercase or non-alphabetic character is found.
-      while ((i < eventData.points[0].x.length) && (eventData.points[0].x[i] >= 'A') && (eventData.points[0].x[i] <= 'Z')) {
-        // Add the character to the subclass string.
-        subclass += eventData.points[0].x[i];
-
-        // Get the next character.
-        ++i;
-      }
-
-      // Display the appropriate category data.
-      animateCategoryData(subclass);
-    }
-  });
-});
 
 // Re-display the main class data when the back button is pressed.
 backButton.on('click', function() {
