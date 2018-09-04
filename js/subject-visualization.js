@@ -263,11 +263,6 @@ lccSubclassDataRequest.addEventListener('load', function(event) {
     // Loop through the data array.
     // for (var i = 0; i < resourceData.length; ++i) {
     for (var i = 0; i < resourceData.length; ++i) {
-      // FIXME: Get extract the main class and subclass from the call number.
-      // var mainClass = resourceData[i].LC;
-      // var subclass = resourceData[i].LC_Sub;
-      // var classNumber = extractClassNumberFrom(resourceData[i].Call_Number);
-
       // Variables
       var callNumber = resourceData[i].DISPLAY_CALL_NO;
       var mainClass;
