@@ -247,6 +247,17 @@ lccSubclassDataRequest.addEventListener('load', function(event) {
     }
   }
 
+  // Add an "Other" subclass to each main class and an "Other" category to each subclass.
+  for (var mainClass in data.mainClasses) {
+    // Add an "Other" category to each subclass.
+    for (var subclass in data.mainClasses[mainClass].subclasses) {
+      data.mainClasses[mainClass].subclasses[subclass].categories['Other'] = new LccCategory('');
+    }
+
+    // Add an "Other" subclass.
+    data.mainClasses[mainClass].subclasses['Other'] = new LccSubclass('');
+  }
+
   // Load and process the data file using D3.
   d3.csv('https://alabama.box.com/shared/static/tw0rze209fk99s06dhqa4h19toirotjo.csv').then(function(resourceData) {
     // Loop through the data array.
