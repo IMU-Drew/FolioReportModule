@@ -28,7 +28,8 @@ const LCC_MAIN_CLASSES = {
 const chartLevels = {
   mainClass: 0,
   subclass: 1,
-  category: 2
+  category: 2,
+  EOrFCategory: 3
 }
 
 // Variables
@@ -51,6 +52,15 @@ function LccMainClass(description) {
   this.subclassData = new Array();
   this.subclassTitles = new Array();
   this.subclasses = new Object();
+}
+
+// Library of Congress Classification main class E or F Object prototype constructor
+// Main classes E and F are distinct from all other main classes because they do not have any subclasses.
+function LccMainClassEOrF(description) {
+  this.description = description;
+  this.categories = new Object();
+  this.categoryData = new Array();
+  this.categoryTitles = new Array();
 }
 
 // Library of Congress Classification subclass Object prototype constructor
@@ -169,6 +179,42 @@ function animateSubclassData(mainClass) {
   backButton.removeClass('no-show');
 }
 
+// Animates the displaying of the category data for the main classes E and F.
+function animateEOrFCategoryData(mainClass) {
+  // Create the data array to pass to plotly.
+  const plotlyCategoryData = [
+    {
+      x: data.mainClasses[mainClass].categoryTitles,
+      y: data.mainClasses[mainClass].categoryData,
+      type: 'bar'
+    }
+  ];
+
+  // Create the layout object to pass to plotly.
+  const plotlyCategoryLayout = {
+    title: 'Number of Resources by Library of Congress Classification',
+    xaxis: {
+      title: 'Classification'
+    },
+    yaxis: {
+      title: 'Number of Resources',
+      range: [0, max(data.mainClasses[mainClass].categoryData)]
+    }
+  };
+
+  // Animate the chart.
+  Plotly.animate('plotly-bar-chart', {
+    data: plotlyCategoryData,
+    layout: plotlyCategoryLayout
+  });
+
+  // Display the back button.
+  backButton.removeClass('no-show');
+
+  // Update the state of the chart.
+  chartLevel = chartLevels.EOrFCategory;
+}
+
 // Animates the displaying of the appropriate category data.
 function animateCategoryData(subclass) {
   // Create the data array to pass to Plotly.
@@ -204,8 +250,27 @@ function animateCategoryData(subclass) {
 
 // Initialize the data Object.
 for (var mainClass in LCC_MAIN_CLASSES) {
-  data.mainClasses[mainClass] = new LccMainClass(LCC_MAIN_CLASSES[mainClass]);
+  // If the main class is not E or F...
+  if ((mainClass !== 'E') && (mainClass != 'F')) {
+    // Create an LccMainClass Object for it.
+    data.mainClasses[mainClass] = new LccMainClass(LCC_MAIN_CLASSES[mainClass]);
+  }
+  // Else, if the main class E or F...
+  else {
+    // Create an LccMainClassEOrF Object for it.
+    data.mainClasses[mainClass] = new LccMainClassEOrF(LCC_MAIN_CLASSES[mainClass]);
+  }
 }
+
+// Add the categories to the E class
+data.mainClasses['E'].categories['E11-143'] = new LccCategory('America', 11, 143);
+data.mainClasses['E'].categories['E151-909'] = new LccCategory('United States', 151, 909);
+
+// Add the categories to the F class
+data.mainClasses['F'].categories['F1-975'] = new LccCategory('United States local history', 1, 975);
+data.mainClasses['F'].categories['F1001-1145.2'] = new LccCategory('British America (including Canada)', 1001, 1145.2);
+data.mainClasses['F'].categories['F1170'] = new LccCategory('French America', 1170, 1170);
+data.mainClasses['F'].categories['F1201-3799'] = new LccCategory('Latin America. Spanish America', 1201, 3799);
 
 lccSubclassDataRequest.addEventListener('load', function(event) {
   // Convert the returned JSON data to a JavaScript object.
@@ -219,44 +284,49 @@ lccSubclassDataRequest.addEventListener('load', function(event) {
     // Get the main class that the subclass falls under.
     mainClass = subclass.charAt(0);
 
-    // Create the new LccSubclass Object.
-    data.mainClasses[mainClass].subclasses[subclass] = new LccSubclass('');
+    // If the main class isn't E or F...
+    if ((mainClass !== 'E') && (mainClass !== 'F')) {
+      // Create the new LccSubclass Object.
+      data.mainClasses[mainClass].subclasses[subclass] = new LccSubclass('');
 
-    // Find the subclass's "main" category, and use it to get the description of the subclass.
-    // Loop through the subclass's categories.
-    for (var i = 0; i < lccSubclassData[subclass].length; ++i) {
-      // If the category is the "main" category...
-      if (lccSubclassData[subclass][i].parents.length === 0) {
-        // Record the name of the "main" category, and use its description for the subclass.
-        data.mainClasses[mainClass].subclasses[subclass].mainCategory = lccSubclassData[subclass][i].id;
-        data.mainClasses[mainClass].subclasses[subclass].description = lccSubclassData[subclass][i].subject;
+      // Find the subclass's "main" category, and use it to get the description of the subclass.
+      // Loop through the subclass's categories.
+      for (var i = 0; i < lccSubclassData[subclass].length; ++i) {
+        // If the category is the "main" category...
+        if (lccSubclassData[subclass][i].parents.length === 0) {
+          // Record the name of the "main" category, and use its description for the subclass.
+          data.mainClasses[mainClass].subclasses[subclass].mainCategory = lccSubclassData[subclass][i].id;
+          data.mainClasses[mainClass].subclasses[subclass].description = lccSubclassData[subclass][i].subject;
 
-        // End the loop, since the "main" category has been found.
-        break;
+          // End the loop, since the "main" category has been found.
+          break;
+        }
       }
-    }
 
-    // Populate the subclass's categories Object.
-    // Loop through the subclasses categories again.
-    for (var i = 0; i < lccSubclassData[subclass].length; ++i) {
-      // If the category is a first-level category...
-      if (lccSubclassData[subclass][i].parents[0] === data.mainClasses[mainClass].subclasses[subclass].mainCategory) {
-        // Create a new sub-Object in the subclass's categories Object to represent it.
-        data.mainClasses[mainClass].subclasses[subclass].categories[lccSubclassData[subclass][i].id] = new LccCategory(lccSubclassData[subclass][i].subject, lccSubclassData[subclass][i].start, lccSubclassData[subclass][i].stop);
+      // Populate the subclass's categories Object.
+      // Loop through the subclass's categories again.
+      for (var i = 0; i < lccSubclassData[subclass].length; ++i) {
+        // If the category is a first-level category...
+        if (lccSubclassData[subclass][i].parents[0] === data.mainClasses[mainClass].subclasses[subclass].mainCategory) {
+          // Create a new sub-Object in the subclass's categories Object to represent it.
+          data.mainClasses[mainClass].subclasses[subclass].categories[lccSubclassData[subclass][i].id] = new LccCategory(lccSubclassData[subclass][i].subject, lccSubclassData[subclass][i].start, lccSubclassData[subclass][i].stop);
+        }
       }
     }
   }
 
+  /*
   // Add an "Other" subclass to each main class and an "Other" category to each subclass.
   for (var mainClass in data.mainClasses) {
     // Add an "Other" subclass.
     data.mainClasses[mainClass].subclasses['Other'] = new LccSubclass('');
-    
+
     // Add an "Other" category to each subclass.
     for (var subclass in data.mainClasses[mainClass].subclasses) {
       data.mainClasses[mainClass].subclasses[subclass].categories['Other'] = new LccCategory('');
     }
   }
+  */
 
   // Load and process the data file using D3.
   d3.csv('https://alabama.box.com/shared/static/tw0rze209fk99s06dhqa4h19toirotjo.csv').then(function(resourceData) {
@@ -318,18 +388,60 @@ lccSubclassDataRequest.addEventListener('load', function(event) {
       }
 
       // Find the category that the resource belongs in.
-      // If both the main class and the subclass are valid...
-      if ((data.mainClasses.hasOwnProperty(mainClass)) && (data.mainClasses[mainClass].subclasses.hasOwnProperty(subclass))) {
-        // Loop through the appropriate categories.
-        for (var category in data.mainClasses[mainClass].subclasses[subclass].categories) {
-          // Get the lower and upper bounds for the current category.
-          var lowerBound = data.mainClasses[mainClass].subclasses[subclass].categories[category].lowerBound;
-          var upperBound = data.mainClasses[mainClass].subclasses[subclass].categories[category].upperBound;
+      // If the main class is valid...
+      if (data.mainClasses.hasOwnProperty(mainClass)) {
+        // If the main class is not E or F...
+        if ((mainClass !== 'E') && (mainClass !== 'F')) {
+          // FIXME: Uncomment after implementing "Other" subclasses in the data object structure.
+          /*
+          // If the subclass is invalid...
+          if (!data.mainClasses[mainClass].subclasses.hasOwnProperty(subclass)) {
+            // Set the subclass to "Other".
+            subclass = 'Other';
+          }
+          */
 
-          // If the resource's class number falls within the bounds of the curent category...
-          if ((classNumber >= lowerBound) && (classNumber <= upperBound)) {
-            // Increment the category's resource counter.
-            ++data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources;
+          // FIXME: Remove if statement after implementing "Other" subclasses in the data object sturcture.
+          // If the subclass is valid...
+          if (data.mainClasses[mainClass].subclasses.hasOwnProperty(subclass)) {
+            // Use a flag to determine whether or not the appropriate category can be found.
+            var categoryFound = false;
+
+            // Loop through the appropriate categories.
+            for (var category in data.mainClasses[mainClass].subclasses[subclass].categories) {
+              // Get the lower and upper bounds for the current category.
+              var lowerBound = data.mainClasses[mainClass].subclasses[subclass].categories[category].lowerBound;
+              var upperBound = data.mainClasses[mainClass].subclasses[subclass].categories[category].upperBound;
+
+              // If the resource's class number falls within the bounds of the curent category...
+              if ((classNumber >= lowerBound) && (classNumber <= upperBound)) {
+                // Increment the category's resource counter.
+                ++data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources;
+
+                // Set the flag indicating that the category has been found.
+                categoryFound = true;
+              }
+            }
+
+            // If the appropriate category was not found...
+            if (categoryFound === false) {
+              // ++data.mainClasses[mainClass].subclasses[subclass].categories['Other'].numResources;
+            }
+          }
+        }
+        // Else, if the main class is E or F...
+        else {
+          // Loop through the appropriate categories.
+          for (var category in data.mainClasses[mainClass].categories) {
+            // Get the lower and upper bounds for the current category.
+            var lowerBound = data.mainClasses[mainClass].categories[category].lowerBound;
+            var upperBound = data.mainClasses[mainClass].categories[category].upperBound;
+
+            // If the resource's class number falls within the bounds of the current cateogry...
+            if ((classNumber >= lowerBound) && (classNumber <= upperBound)) {
+              // Increment the category's resource counter.
+              ++data.mainClasses[mainClass].categories[category].numResources;
+            }
           }
         }
       }
@@ -341,33 +453,49 @@ lccSubclassDataRequest.addEventListener('load', function(event) {
       // Variables
       var numResourcesInMainClass = 0;
 
-      // Construct the subclass data and titles arrays for the current main class.
-      // Loop through each subclass in the current main class.
-      for (var subclass in data.mainClasses[mainClass].subclasses) {
-        // Variables
-        var numResourcesInSubclass = 0;
+      // If the main class is not E or F...
+      if ((mainClass !== 'E') && (mainClass !== 'F')) {
+        // Construct the subclass data and titles arrays for the current main class.
+        // Loop through each subclass in the current main class.
+        for (var subclass in data.mainClasses[mainClass].subclasses) {
+          // Variables
+          var numResourcesInSubclass = 0;
 
-        // Construct the category data and titles arrays for the current subclass.
-        // Loop through each category in the current subclass.
-        for (var category in data.mainClasses[mainClass].subclasses[subclass].categories) {
-          // Push the number of resources in the current category to the data array of its subclass.
-          data.mainClasses[mainClass].subclasses[subclass].categoryData.push(data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources);
+          // Construct the category data and titles arrays for the current subclass.
+          // Loop through each category in the current subclass.
+          for (var category in data.mainClasses[mainClass].subclasses[subclass].categories) {
+            // Push the number of resources in the current category to the data array of its subclass.
+            data.mainClasses[mainClass].subclasses[subclass].categoryData.push(data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources);
 
-          // Add the number of resources in the current category to the number of resources in the subclass.
-          numResourcesInSubclass += data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources;
+            // Add the number of resources in the current category to the number of resources in the subclass.
+            numResourcesInSubclass += data.mainClasses[mainClass].subclasses[subclass].categories[category].numResources;
+
+            // Push the title of the current category to the title array of its subclass.
+            data.mainClasses[mainClass].subclasses[subclass].categoryTitles.push(data.mainClasses[mainClass].subclasses[subclass].categories[category].description);
+          }
+
+          // Push the number of resources in the current subclass to the data array of its main class.
+          data.mainClasses[mainClass].subclassData.push(numResourcesInSubclass);
+
+          // Add the number of resources in the current subclass to the number of resources in the main class.
+          numResourcesInMainClass += numResourcesInSubclass;
+
+          // Push the title of the current subclass to the title array of its main class.
+          data.mainClasses[mainClass].subclassTitles.push(subclass + ': ' + data.mainClasses[mainClass].subclasses[subclass].description);
+        }
+      }
+      // Else, if the main class is E or F...
+      else {
+        for (var category in data.mainClasses[mainClass].categories) {
+          // Push the number of resources in the current category to the data array of its main class.
+          data.mainClasses[mainClass].categoryData.push(data.mainClasses[mainClass].categories[category].numResources);
+
+          // Add the number of resources in the current category to the number of resources in the main class.
+          numResourcesInMainClass += data.mainClasses[mainClass].categories[category].numResources;
 
           // Push the title of the current category to the title array of its subclass.
-          data.mainClasses[mainClass].subclasses[subclass].categoryTitles.push(data.mainClasses[mainClass].subclasses[subclass].categories[category].description);
+          data.mainClasses[mainClass].categoryTitles.push(data.mainClasses[mainClass].categories[category].description);
         }
-
-        // Push the number of resources in the current subclass to the data array of its main class.
-        data.mainClasses[mainClass].subclassData.push(numResourcesInSubclass);
-
-        // Add the number of resources in the current subclass to the number of resources in the main class.
-        numResourcesInMainClass += numResourcesInSubclass;
-
-        // Push the title of the current subclass to the title array of its main class.
-        data.mainClasses[mainClass].subclassTitles.push(subclass + ': ' + data.mainClasses[mainClass].subclasses[subclass].description);
       }
 
       // Push the number of resources in the current main class to the main class data array.
@@ -412,8 +540,15 @@ lccSubclassDataRequest.addEventListener('load', function(event) {
         // Get the value of the main class corresponding to the bar that was clicked.
         var mainClass = eventData.points[0].x[0];
 
-        // Display the appropriate subclass data.
-        animateSubclassData(mainClass);
+        // If the main class selected is not E or F...
+        if ((mainClass !== 'E') && (mainClass !== 'F')) {
+          // Display the appropriate subclass data.
+          animateSubclassData(mainClass);
+        }
+        // Else, if the main class selected is E or F...
+        else {
+          animateEOrFCategoryData(mainClass);
+        }
       }
       // Else, if subclass data is currently being displayed...
       else if (chartLevel === chartLevels.subclass) {
@@ -443,12 +578,12 @@ lccSubclassDataRequest.send();
 
 // Re-display the main class data when the back button is pressed.
 backButton.on('click', function() {
-  // If subclass data is currently being displayed...
-  if (chartLevel === chartLevels.subclass) {
+  // If subclass data or the category data for the E or F main classes is currently being displayed...
+  if ((chartLevel === chartLevels.subclass) || (chartLevel === chartLevels.EOrFCategory)) {
     // Display the main class data.
     animateMainClassData();
   }
-  // If category data is currently being displayed...
+  // Else, if category data is currently being displayed...
   else if (chartLevel === chartLevels.category) {
     // Display the appropriate subclass data.
     animateSubclassData(currentMainClass);
