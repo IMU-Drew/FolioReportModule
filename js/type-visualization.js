@@ -74,7 +74,7 @@ d3.csv('https://alabama.box.com/shared/static/tw0rze209fk99s06dhqa4h19toirotjo.c
     }
   ];
 
-  // Create the main class layout object to pass to Plotly.
+  // Create the layout object to pass to Plotly.
   const plotlyLayout = {
     title: 'Number of Resources by Type',
     xaxis: {
