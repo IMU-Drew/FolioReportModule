@@ -26,6 +26,7 @@ const resourceTypes = {
 // Variables
 
 var plotlyBarChart = document.getElementById('plotly-bar-chart');
+var logCheckbox = document.getElementById('log-checkbox');
 
 var data = {
   resourceTypeData: new Array(),
@@ -74,7 +75,7 @@ d3.csv('https://alabama.box.com/shared/static/tw0rze209fk99s06dhqa4h19toirotjo.c
     }
   ];
 
-  // Create the layout object to pass to Plotly.
+  // Create the (non-logarithmic) layout object to pass to Plotly.
   const plotlyLayout = {
     title: 'Number of Resources by Type',
     xaxis: {
@@ -84,12 +85,30 @@ d3.csv('https://alabama.box.com/shared/static/tw0rze209fk99s06dhqa4h19toirotjo.c
     yaxis: {
       title: 'Number of Resources'
     },
-    height: 1000,
+    height: 750,
     margin: {
-      b: 500
+      b: 200
     }
   }
 
   // Draw the chart.
   Plotly.newPlot('plotly-bar-chart', plotlyData, plotlyLayout);
+
+  // Update the chart whenever the "Logarithmic" checkbox is checked or un-checked.
+  logCheckbox.addEventListener('change', function() {
+    // If the checkbox was checked...
+    if (logCheckbox.checked) {
+      // Make the scale of the y-axis logarithmic.
+      Plotly.relayout(plotlyBarChart, {
+        'yaxis.type': 'log'
+      })
+    }
+    // Else, if the checkbox was unchecked...
+    else {
+      // Make the scale of the y-axis linear.
+      Plotly.relayout(plotlyBarChart, {
+        'yaxis.type': '-'
+      })
+    }
+  })
 });
