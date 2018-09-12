@@ -349,7 +349,7 @@ lccSubclassDataRequest.addEventListener('load', function(event) {
         var j = 1;
 
         // Extract the subclass from the call number.
-        // Note that if the call number does not contain a subclass, then the subclass variable will just contain the ;etter for the main class.
+        // Note that if the call number does not contain a subclass, then the subclass variable will just contain the letter for the main class.
         // Loop through each character of the call number.
         while (j < callNumber.length) {
           // If the character is an uppercase letter...
