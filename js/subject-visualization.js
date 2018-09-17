@@ -289,7 +289,7 @@ lccSubclassDataRequest.addEventListener('load', function(event) {
       // Create the new LccSubclass Object.
       data.mainClasses[mainClass].subclasses[subclass] = new LccSubclass('');
 
-      // Find the subclass's "main" category, and use it to get the description of the subclass.
+      // Find the "main" cateogry of the subclass, and use it to get the description of the subclass.
       // Loop through the subclass's categories.
       for (var i = 0; i < lccSubclassData[subclass].length; ++i) {
         // If the category is the "main" category...
